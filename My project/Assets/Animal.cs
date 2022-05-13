@@ -2,12 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Animal : MonoBehaviour
-{
+public class Animal : MonoBehaviour{
+
     public Sprite circle;
+    public LineRenderer lineRenderer;
+    List<Vector3> points;
+    
     // Start is called before the first frame update
     void Start(){
-        List<Vector3> points = simm_levy(50, 2.5f, new Vector3(0,0,-0.5f));
+        int steps = 50;
+        float mu = 2f;
+        points = simm_levy(steps, mu, new Vector3(0,0,-0.5f));
+        int i = 0;
+        lineRenderer.positionCount = steps;
         foreach (var item in points){ // Create points
             GameObject go = new GameObject();
             go.transform.position = item;
@@ -15,12 +22,14 @@ public class Animal : MonoBehaviour
             SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
             sr.color = Color.red;
             sr.sprite = circle;
+
+            lineRenderer.SetPosition(i, item);
+            i++;
         }
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update(){
         
     }
 
