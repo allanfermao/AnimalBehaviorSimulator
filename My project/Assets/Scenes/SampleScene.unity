@@ -288,6 +288,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   circle: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
   lineRenderer: {fileID: 153971373}
+  stepCount: 1
 --- !u!61 &170989171
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -375,7 +376,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   m_Color: {r: 0.06003024, g: 0.10359779, b: 0.6698113, a: 1}
   m_FlipX: 0
