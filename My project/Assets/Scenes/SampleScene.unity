@@ -266,7 +266,6 @@ GameObject:
   - component: {fileID: 170989173}
   - component: {fileID: 170989172}
   - component: {fileID: 170989171}
-  - component: {fileID: 170989170}
   m_Layer: 0
   m_Name: Circle
   m_TagString: Untagged
@@ -274,21 +273,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &170989170
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 170989169}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a3af41896976c5479e60a21d8c055ba, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  circle: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
-  lineRenderer: {fileID: 153971373}
-  stepCount: 1
 --- !u!61 &170989171
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -497,6 +481,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2005989220}
   - component: {fileID: 2005989219}
+  - component: {fileID: 2005989221}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -571,3 +556,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2005989221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2005989218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0252505bcef6ea48875e483c803297e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  circle: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
+  circleElement: {fileID: 170989169}
+  lineRenderer: {fileID: 153971373}
+  points: []
+  stepCount: 1

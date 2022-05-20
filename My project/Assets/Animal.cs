@@ -7,7 +7,7 @@ public class Animal : MonoBehaviour
 
     public Sprite circle;
     public LineRenderer lineRenderer;
-    List<Vector3> points;
+    public List<Vector3> points;
     public int stepCount = 1;
 
     // Start is called before the first frame update
@@ -16,8 +16,14 @@ public class Animal : MonoBehaviour
         int steps = 50;
         float mu = 2f;
         points = simm_levy(steps, mu, new Vector3(0, 0, -0.5f));
-        lineRenderer.positionCount = steps;
-        transform.position = points[0];
+
+        lineRenderer = GameObject.Find("LineRenderer").GetComponent<LineRenderer>();
+        LineRenderer lineRendererC = Instantiate(lineRenderer);
+        lineRendererC.positionCount = steps;
+
+        circle = GetComponent<SpriteRenderer>().sprite; // set the sprite
+
+        transform.position = points[0]; // set initial position
 
         int i = 0;
         foreach (var item in points){ // Create points
@@ -28,7 +34,7 @@ public class Animal : MonoBehaviour
             sr.color = Color.red;
             sr.sprite = circle;
 
-            lineRenderer.SetPosition(i, item);
+            lineRendererC.SetPosition(i, item);
             i++;
         }
     }
@@ -41,6 +47,7 @@ public class Animal : MonoBehaviour
     void FixedUpdate(){
         float speed = 4f;
         float step = speed * Time.fixedDeltaTime; // Set the step size
+
 
         if(stepCount < points.Count){
             transform.position = Vector3.MoveTowards(transform.position, points[stepCount], step); // Move the individual gradually
