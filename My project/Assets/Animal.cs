@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class Animal : MonoBehaviour
@@ -10,7 +11,7 @@ public class Animal : MonoBehaviour
     public List<Vector3> points;
     public int stepCount = 1;
     public int timeScaleInDays;
-    public int coordTimeIntervalInMinutes;
+    public int coordTimeIntervalInMinutes;    
     public Dictionary<string, float> limits = new Dictionary<string, float>(){
         {"L", -100f},
         {"R", 100f},
@@ -21,8 +22,8 @@ public class Animal : MonoBehaviour
     // Start is called before the first frame update
     void Start(){
         float mu = 2.5f;
-        float x = Random.Range(limits["L"], limits["R"]);
-        float y = Random.Range(limits["B"], limits["T"]);     
+        float x = UnityEngine.Random.Range(limits["L"], limits["R"]);
+        float y = UnityEngine.Random.Range(limits["B"], limits["T"]);     
 
         int steps = (int)(60 / coordTimeIntervalInMinutes) * 24 * timeScaleInDays; // times per hour * 24 hours * days
 
@@ -81,30 +82,71 @@ public class Animal : MonoBehaviour
         y.Add(x0.y);
 
         for (int i = 0; i < steps - 1; i++){
-            float ang = (float)Random.Range(-pi, pi); // Get random angles (uniform distribuiton)
-            float dist = (float)System.Math.Pow(Random.Range(0f, 1.001f), (1 / (1 - mu))); // Get distance of steps (levy distribution)
-            x.Add((float)System.Math.Cos(ang) * dist); // Get x axis coordinates
-            y.Add((float)System.Math.Sin(ang) * dist); // Get y axis coordinates
+            float ang = (float)UnityEngine.Random.Range(-pi, pi); // Get random angles (uniform distribuiton)
+            float dist = (float)System.Math.Pow(UnityEngine.Random.Range(0f, 1.001f), (1 / (1 - mu))); // Get distance of steps (levy distribution)
+            float xCoord = (float)System.Math.Cos(ang) * dist;
+            // limit the x coord
+            if(xCoord > limits["R"])
+                xCoord = limits["R"];
+            else if(xCoord < limits["L"])
+                xCoord = limits["L"];            
+            x.Add(xCoord); // Get x axis coordinates 
+
+            float yCoord = (float)System.Math.Sin(ang) * dist;
+            // limit the y coord
+            if(yCoord > limits["T"])
+                yCoord = limits["T"];
+            else if(yCoord < limits["B"])
+                yCoord = limits["B"];
+            y.Add(yCoord); // Get y axis coordinates
         }
 
-        x = cumulative_sum(x); // Cumulative sum of coordinates (correlated and coherent movements)
-        y = cumulative_sum(y);
+        float maxX, minX, maxY, minY;
+
+        var cX = cumulative_sum(x); // Cumulative sum of coordinates (correlated and coherent movements)
+        x = cX.Item1;
+        if(cX.Item2 < Initializing.valuesX.Item1)
+            minX = cX.Item2;
+        else minX = Initializing.valuesX.Item1;
+        if(cX.Item3 > Initializing.valuesX.Item2)
+            maxX = cX.Item3;
+        else maxX = Initializing.valuesX.Item2;
+        Initializing.valuesX = new Tuple<float, float>(minX, maxX);
+
+        var cY = cumulative_sum(y);
+        y = cY.Item1;
+        if(cY.Item2 < Initializing.valuesY.Item1)
+            minY = cY.Item2;
+        else minY = Initializing.valuesY.Item1;
+        if(cY.Item3 > Initializing.valuesY.Item2)
+            maxY = cY.Item3;
+        else maxY = Initializing.valuesY.Item2;
+        Initializing.valuesY = new Tuple<float, float>(minY, maxY);
+
+        // print("valuesX: " + Initializing.valuesX.Item1 + " " + Initializing.valuesX.Item2);
+        // print("valuesY: " + Initializing.valuesY.Item1 + " " + Initializing.valuesY.Item2);
 
         List<Vector3> points = new List<Vector3>();
         for (int i = 0; i < x.Count; i++){ // Create the Vector3 coordinates
             points.Add(new Vector3(x[i], y[i], -0.5f));
-            Debug.Log(i + ": " + x[i] + "; " + y[i]);
+            // Debug.Log(i + ": " + x[i] + "; " + y[i]);
         }
 
         return points;
     }
 
-    List<float> cumulative_sum(List<float> list){
+    Tuple<List<float>, float, float> cumulative_sum(List<float> list){
         List<float> coord = new List<float>();
+        float max = Int32.MinValue, min = Int32.MaxValue;
         coord.Add(list[0]);
         for (int i = 1; i < list.Count; i++){
-            coord.Add(coord[i - 1] + list[i]);
+            float value = coord[i - 1] + list[i];
+            coord.Add(value);
+            if(value > max)
+                max = value;
+            if(value < min)
+                min = value;
         }
-        return coord;
+        return new Tuple<List<float>, float, float>(coord, min, max);
     }
 }

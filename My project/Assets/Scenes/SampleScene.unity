@@ -283,7 +283,7 @@ BoxCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
@@ -381,7 +381,7 @@ Transform:
   m_GameObject: {fileID: 170989169}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -13.704938, y: -0.27392787, z: -0.5}
-  m_LocalScale: {x: 3, y: 3, z: 0}
+  m_LocalScale: {x: 6, y: 6, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -440,7 +440,7 @@ Camera:
   far clip plane: 10
   field of view: 60
   orthographic: 1
-  orthographic size: 101.78615
+  orthographic size: 104.10901
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -570,9 +570,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   circle: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
   animal: {fileID: 170989169}
-  lineRenderer: {fileID: 153971373}
   points: []
   timeScaleInDays: 30
   coordTimeIntervalInMinutes: 30
-  nAnimals: 2
+  lineRenderer: {fileID: 153971373}
+  nAnimals: 6
   stepCount: 1
