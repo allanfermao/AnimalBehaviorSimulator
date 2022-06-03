@@ -12,11 +12,13 @@ public class Animal : MonoBehaviour
     public int stepCount = 1;
     public int timeScaleInDays;
     public int coordTimeIntervalInMinutes;    
+    // Devido à distruibuição homogênea os valores limites variam, geralmente, entre -500 e 500 nos dois eixos
+    // Os valores dos limites podem ser escolhidos usando estudos empíricos
     public Dictionary<string, float> limits = new Dictionary<string, float>(){
-        {"L", -100f},
-        {"R", 100f},
-        {"T", 100f},
-        {"B", -100f}
+        {"L", -300f},
+        {"R", 300f},
+        {"T", 300f},
+        {"B", -300f}
     };
 
     // Start is called before the first frame update
@@ -37,6 +39,7 @@ public class Animal : MonoBehaviour
 
         transform.position = points[0]; // set initial position
 
+        // Render the walks
         int i = 0;
         foreach (var item in points){ // Create points
             GameObject go = new GameObject();
@@ -85,7 +88,9 @@ public class Animal : MonoBehaviour
             float ang = (float)UnityEngine.Random.Range(-pi, pi); // Get random angles (uniform distribuiton)
             float dist = (float)System.Math.Pow(UnityEngine.Random.Range(0f, 1.001f), (1 / (1 - mu))); // Get distance of steps (levy distribution)
             float xCoord = (float)System.Math.Cos(ang) * dist;
-            // limit the x coord
+            // ########################## TO REMAKE THE MAX STEP SIZE LOGIC #####################################
+            // animais com perfil mais migratório podem ter tamanhos de passos maiores
+            // limit the x coord                 
             if(xCoord > limits["R"])
                 xCoord = limits["R"];
             else if(xCoord < limits["L"])

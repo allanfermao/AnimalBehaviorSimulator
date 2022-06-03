@@ -27,7 +27,9 @@ public class Initializing : MonoBehaviour
             GameObject animalCopy = Instantiate(animal); 
         }
 
-        StartCoroutine(ResizeSquare());        
+        StartCoroutine(ResizeSquare());  
+
+        // TODO: Collider and store the traveled distance      
         
     }
 
@@ -43,17 +45,28 @@ public class Initializing : MonoBehaviour
 
     // get the max size of square and resize it
     IEnumerator ResizeSquare(){        
-        // TO DO: implements position change of square
+        // Observação: 
+        // será simulado um ambiente de 100 km², porém, o square será redimensionado de acordo com o alcance
+        // máximo das trajetórias. Será calculada a distância máxima percorrida pelas indivíduos no tempo de simulação
+        // O tamanho máximo do square deve ser limitado (distX <= 2000 e distY idem) por estudos empíricos
+        // e esse tamanho máximo equivale a 100 km²
+        
         // yield return new WaitWhile(() => {});                
         yield return new WaitForSeconds(0.5f);     
 
-        float sizeX = Math.Abs(valuesX.Item1) > Math.Abs(valuesX.Item2) ? Math.Abs(valuesX.Item1) : Math.Abs(valuesX.Item2);
-        sizeX *= 2;
+        float distX = valuesX.Item2 - valuesX.Item1;
+        float distY = valuesY.Item2 - valuesY.Item1;
 
-        float sizeY = Math.Abs(valuesY.Item1) > Math.Abs(valuesY.Item2) ? Math.Abs(valuesY.Item1) : Math.Abs(valuesY.Item2);
-        sizeY *= 2;
+        float midPointX = valuesX.Item1 + distX/2;
+        float midPointY = valuesY.Item1 + distY/2;
 
-        transform.localScale = new Vector3(sizeX, sizeY, 1);           
+        print("distX: " + distX);
+        print("distY: " + distY);
+        print("midX: " + midPointX);
+        print("midY: " + midPointY);
+
+        transform.localScale = new Vector3(distX, distY, 1); // resize square
+        transform.position = new Vector3(midPointX, midPointY, 0); // reposition aquare              
     }
 }    
 
