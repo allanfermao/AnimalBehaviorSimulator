@@ -31,27 +31,27 @@ public class Animal : MonoBehaviour
 
         points = simm_levy(steps, mu, new Vector3(x, y, -0.5f));
 
-        lineRenderer = GameObject.Find("LineRenderer").GetComponent<LineRenderer>();
-        LineRenderer lineRendererC = Instantiate(lineRenderer);
-        lineRendererC.positionCount = steps;
+        // lineRenderer = GameObject.Find("LineRenderer").GetComponent<LineRenderer>();
+        // LineRenderer lineRendererC = Instantiate(lineRenderer);
+        // lineRendererC.positionCount = steps;
 
         circle = GetComponent<SpriteRenderer>().sprite; // set the sprite
 
         transform.position = points[0]; // set initial position
 
         // Render the walks
-        int i = 0;
-        foreach (var item in points){ // Create points
-            GameObject go = new GameObject();
-            go.transform.position = item;
-            go.transform.localScale = new Vector3(2, 2, 0);
-            SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-            sr.color = Color.red;
-            sr.sprite = circle;
+        // int i = 0;
+        // foreach (var item in points){ // Create points
+        //     GameObject go = new GameObject();
+        //     go.transform.position = item;
+        //     go.transform.localScale = new Vector3(2, 2, 0);
+        //     SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        //     sr.color = Color.red;
+        //     sr.sprite = circle;
 
-            lineRendererC.SetPosition(i, item);
-            i++;
-        }
+        //     lineRendererC.SetPosition(i, item);
+        //     i++;
+        // }
     }
 
     // Update is called once per frame
@@ -74,6 +74,16 @@ public class Animal : MonoBehaviour
 
             if(Vector3.Distance(transform.position, points[stepCount]) == 0f)
                 stepCount++;      
+
+            Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y), 50f);            
+            foreach(var animal in animalsInRange){
+                // GameObject go = animal.gameObject;
+                if(animal.name != name){
+                    print(name + " encontrou " + animal.name);
+                    // TO DO: trocar a cor dos indivíduos quando na interação
+                }    
+            }                
+            Array.Clear(animalsInRange, 0, animalsInRange.Length);
         }                  
     }
 
@@ -154,4 +164,11 @@ public class Animal : MonoBehaviour
         }
         return new Tuple<List<float>, float, float>(coord, min, max);
     }
+
+    void OnDrawGizmosSelected ()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere (transform.position, 50f);
+    }
 }
+

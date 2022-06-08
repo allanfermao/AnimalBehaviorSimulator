@@ -25,6 +25,7 @@ public class Initializing : MonoBehaviour
 
         for(int i=0; i < nAnimals-1; i++){
             GameObject animalCopy = Instantiate(animal); 
+            animalCopy.name = "Animal" + (i+1).ToString();
         }
 
         StartCoroutine(ResizeSquare());  
