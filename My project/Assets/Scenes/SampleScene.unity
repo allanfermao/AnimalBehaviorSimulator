@@ -568,11 +568,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0252505bcef6ea48875e483c803297e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  circle: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
   animal: {fileID: 170989169}
   points: []
   timeScaleInDays: 30
   coordTimeIntervalInMinutes: 30
-  lineRenderer: {fileID: 153971373}
-  nAnimals: 5
+  nAnimals: 20
   stepCount: 1

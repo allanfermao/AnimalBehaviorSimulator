@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Initializing : MonoBehaviour
-{
-    public Sprite circle;
+public class Initializing : MonoBehaviour{
     public GameObject animal;
     public List<Vector3> points;
     public int timeScaleInDays = 30;
     public int coordTimeIntervalInMinutes = 30;
-    public LineRenderer lineRenderer;
     public static Tuple<float, float> valuesX = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public static Tuple<float, float> valuesY = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public int nAnimals = 3;
@@ -30,7 +27,7 @@ public class Initializing : MonoBehaviour
 
         StartCoroutine(ResizeSquare());  
 
-        // TODO: Collider and store the traveled distance      
+        // TODO: Collider and store the traveled distance   
         
     }
 

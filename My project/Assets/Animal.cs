@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 
-public class Animal : MonoBehaviour
-{
+public class Animal : MonoBehaviour{    
 
-    public Sprite circle;
+    public SpriteRenderer spriteRenderer;
     public LineRenderer lineRenderer;
     public List<Vector3> points;
     public int stepCount = 1;
@@ -20,6 +19,20 @@ public class Animal : MonoBehaviour
         {"T", 300f},
         {"B", -300f}
     };
+    public enum Specie {
+        LION,
+        ZEBRA,
+        HYENA,
+        BUFFALO
+    };    
+
+    // Individual Attributes
+    public Specie specie; // enum
+    public bool interacting = false;
+    public int stamina = 100;
+    public int age; // in months    
+    public int socialStatus; // (current) enum
+
 
     // Start is called before the first frame update
     void Start(){
@@ -35,7 +48,8 @@ public class Animal : MonoBehaviour
         // LineRenderer lineRendererC = Instantiate(lineRenderer);
         // lineRendererC.positionCount = steps;
 
-        circle = GetComponent<SpriteRenderer>().sprite; // set the sprite
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        Sprite circle = spriteRenderer.sprite; // set the sprite
 
         transform.position = points[0]; // set initial position
 
@@ -80,9 +94,19 @@ public class Animal : MonoBehaviour
                 // GameObject go = animal.gameObject;
                 if(animal.name != name){
                     print(name + " encontrou " + animal.name);
-                    // TO DO: trocar a cor dos indivíduos quando na interação
-                }    
-            }                
+                    interacting = true;                
+                    break;
+                    // StartCoroutine(ChangeColor(1f));
+                }
+            }    
+            if(interacting){
+                spriteRenderer.color = Color.Lerp(Color.blue, Color.red, Mathf.PingPong(Time.time*2, 1));
+            }    
+            if(animalsInRange.Length == 1){ // just the own element
+                spriteRenderer.color = Color.blue;
+                interacting = false;
+            }
+
             Array.Clear(animalsInRange, 0, animalsInRange.Length);
         }                  
     }
@@ -165,10 +189,15 @@ public class Animal : MonoBehaviour
         return new Tuple<List<float>, float, float>(coord, min, max);
     }
 
-    void OnDrawGizmosSelected ()
-    {
+    void OnDrawGizmosSelected (){
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere (transform.position, 50f);
+    }
+
+    IEnumerator ChangeColor(float time){
+        yield return new WaitForSeconds(time);
+
+        spriteRenderer.color = spriteRenderer.color == Color.blue ? Color.red : Color.blue;
     }
 }
 
