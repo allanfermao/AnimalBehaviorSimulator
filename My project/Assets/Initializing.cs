@@ -8,6 +8,7 @@ public class Initializing : MonoBehaviour{
     public List<Vector3> points;
     public int timeScaleInDays = 30;
     public int coordTimeIntervalInMinutes = 30;
+    // max and min values
     public static Tuple<float, float> valuesX = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public static Tuple<float, float> valuesY = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public int nAnimals = 3;
@@ -27,7 +28,7 @@ public class Initializing : MonoBehaviour{
 
         StartCoroutine(ResizeSquare());  
 
-        // TODO: Collider and store the traveled distance   
+        // TODO: Store the traveled distance   
         
     }
 

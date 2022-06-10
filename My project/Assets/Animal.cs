@@ -5,11 +5,11 @@ using UnityEngine;
 
 public class Animal : MonoBehaviour{    
 
-    public SpriteRenderer spriteRenderer;
-    public LineRenderer lineRenderer;
-    public List<Vector3> points;
     public int stepCount = 1;
     public int timeScaleInDays;
+    public List<Vector3> points;
+    public LineRenderer lineRenderer;
+    public SpriteRenderer spriteRenderer;
     public int coordTimeIntervalInMinutes;    
     // Devido à distruibuição homogênea os valores limites variam, geralmente, entre -500 e 500 nos dois eixos
     // Os valores dos limites podem ser escolhidos usando estudos empíricos
@@ -25,14 +25,39 @@ public class Animal : MonoBehaviour{
         HYENA,
         BUFFALO
     };    
+    public enum Feed {
+        HERBIVORE,
+        CARNIVORE
+    };
+    public enum Gender {
+        M,
+        F
+    };
 
     // Individual Attributes
+    public Gender gender;
+    public int age; // months    
+    public int stamina = 100;
     public Specie specie; // enum
     public bool interacting = false;
-    public int stamina = 100;
-    public int age; // in months    
+    public float travelledDistance = 0;
     public int socialStatus; // (current) enum
 
+    // Specie Attributes
+    public Feed feed;
+    public int deathRate;
+    public int averageSpeed;
+    public int numberChildrens; 
+    public int deathRateChildrens;
+    public int gestationTime; // days
+    public int survivalTime; // months
+    public int sexualMaturity; // months
+    public int timeBetweenBirths; // months
+    public int populationDensity; // per 100km²
+    public float dailyTravelledDistance; // km/24h
+    public int groupHuntingSuccessRate; // per cent
+    public int individualHuntingSuccessRate; // per cent
+    public List<Specie> targets;
 
     // Start is called before the first frame update
     void Start(){
@@ -44,16 +69,17 @@ public class Animal : MonoBehaviour{
 
         points = simm_levy(steps, mu, new Vector3(x, y, -0.5f));
 
-        // lineRenderer = GameObject.Find("LineRenderer").GetComponent<LineRenderer>();
-        // LineRenderer lineRendererC = Instantiate(lineRenderer);
-        // lineRendererC.positionCount = steps;
-
         spriteRenderer = GetComponent<SpriteRenderer>();
         Sprite circle = spriteRenderer.sprite; // set the sprite
 
         transform.position = points[0]; // set initial position
 
         // Render the walks
+
+        // lineRenderer = GameObject.Find("LineRenderer").GetComponent<LineRenderer>();
+        // LineRenderer lineRendererC = Instantiate(lineRenderer);
+        // lineRendererC.positionCount = steps;
+        
         // int i = 0;
         // foreach (var item in points){ // Create points
         //     GameObject go = new GameObject();
@@ -84,7 +110,11 @@ public class Animal : MonoBehaviour{
         // frequentemente. Com base nisso, ajustar a distância percorrida, obedecendo a velocidade padrão. 
 
         if(stepCount < points.Count){
+            Vector3 beforeStep = new Vector3(transform.position.x, transform.position.y, -0.5f);
             transform.position = Vector3.MoveTowards(transform.position, points[stepCount], step); // Move the individual gradually
+            Vector3 afterStep = new Vector3(transform.position.x, transform.position.y, -0.5f);
+
+            travelledDistance += Vector3.Distance(beforeStep, afterStep);
 
             if(Vector3.Distance(transform.position, points[stepCount]) == 0f)
                 stepCount++;      
@@ -93,10 +123,9 @@ public class Animal : MonoBehaviour{
             foreach(var animal in animalsInRange){
                 // GameObject go = animal.gameObject;
                 if(animal.name != name){
-                    print(name + " encontrou " + animal.name);
+                    // print(name + " encontrou " + animal.name);
                     interacting = true;                
                     break;
-                    // StartCoroutine(ChangeColor(1f));
                 }
             }    
             if(interacting){
@@ -108,7 +137,8 @@ public class Animal : MonoBehaviour{
             }
 
             Array.Clear(animalsInRange, 0, animalsInRange.Length);
-        }                  
+        }    
+        else print("Traveled distance by " + name + ": " + travelledDistance);
     }
 
     List<Vector3> simm_levy(int steps, float mu, Vector3 x0){ // Run the simulate e return Vector3 coordinates
@@ -120,7 +150,8 @@ public class Animal : MonoBehaviour{
 
         for (int i = 0; i < steps - 1; i++){
             float ang = (float)UnityEngine.Random.Range(-pi, pi); // Get random angles (uniform distribuiton)
-            float dist = (float)System.Math.Pow(UnityEngine.Random.Range(0f, 1.001f), (1 / (1 - mu))); // Get distance of steps (levy distribution)
+            float dist = (float)System.Math.Pow(UnityEngine.Random.Range(0f, 1.001f), (1 / (1 - mu))); // Get distance of steps (levy distribution)            
+
             float xCoord = (float)System.Math.Cos(ang) * dist;
             // ########################## TO REMAKE THE MAX STEP SIZE LOGIC #####################################
             // animais com perfil mais migratório podem ter tamanhos de passos maiores
@@ -143,7 +174,7 @@ public class Animal : MonoBehaviour{
         float maxX, minX, maxY, minY;
 
         var cX = cumulative_sum(x); // Cumulative sum of coordinates (correlated and coherent movements)
-        x = cX.Item1;
+        x = cX.Item1; // x coordinates
         if(cX.Item2 < Initializing.valuesX.Item1)
             minX = cX.Item2;
         else minX = Initializing.valuesX.Item1;
@@ -153,7 +184,7 @@ public class Animal : MonoBehaviour{
         Initializing.valuesX = new Tuple<float, float>(minX, maxX);
 
         var cY = cumulative_sum(y);
-        y = cY.Item1;
+        y = cY.Item1; // y coordinates
         if(cY.Item2 < Initializing.valuesY.Item1)
             minY = cY.Item2;
         else minY = Initializing.valuesY.Item1;
@@ -187,6 +218,44 @@ public class Animal : MonoBehaviour{
                 min = value;
         }
         return new Tuple<List<float>, float, float>(coord, min, max);
+    }
+
+    void InitializeLion(){
+        // age; // random        
+        specie = Specie.LION;
+        // gender; // random
+        // socialStatus; // random
+
+        // Specie Attributes
+        feed = Feed.CARNIVORE;
+        deathRate = 10;
+        averageSpeed = 4;
+        // numberChildrens; // random
+        deathRateChildrens = 60;
+        gestationTime = 110;
+        survivalTime = 168;
+        // sexualMaturity; // dependent of gender
+        timeBetweenBirths = 24;
+        populationDensity = 12;
+        // dailyTravelledDistance; // random
+        groupHuntingSuccessRate = 30;
+        individualHuntingSuccessRate = 17;
+        targets = new List<Specie> {
+            Specie.BUFFALO,
+            Specie.ZEBRA
+        };
+    }
+
+    void InitializeHyena(){
+
+    }
+
+    void InitializeZebra(){
+
+    }
+
+    void InitializeBuffalo(){
+
     }
 
     void OnDrawGizmosSelected (){
