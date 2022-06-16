@@ -572,5 +572,5 @@ MonoBehaviour:
   points: []
   timeScaleInDays: 30
   coordTimeIntervalInMinutes: 30
-  nAnimals: 20
+  nAnimals: 50
   stepCount: 1

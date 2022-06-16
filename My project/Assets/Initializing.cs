@@ -13,6 +13,12 @@ public class Initializing : MonoBehaviour{
     public static Tuple<float, float> valuesY = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public int nAnimals = 3;
     public int stepCount = 1;
+    public enum Densities {
+        LION = 12,
+        HYENA = 12,
+        BUFFALO = 430,
+        ZEBRA = 700
+    };
 
     // Start is called before the first frame update
     void Start(){
@@ -21,14 +27,27 @@ public class Initializing : MonoBehaviour{
         component.timeScaleInDays = timeScaleInDays;
         component.coordTimeIntervalInMinutes = coordTimeIntervalInMinutes;
 
-        for(int i=0; i < nAnimals-1; i++){
-            GameObject animalCopy = Instantiate(animal); 
-            animalCopy.name = "Animal" + (i+1).ToString();
+        for(int i=0; i < (int)Densities.LION; i++){
+            GameObject animalCopy = Instantiate(animal);         
+            Animal scriptCopy = animalCopy.GetComponent<Animal>();            
+            scriptCopy.specie = Animal.Specie.LION;
+            animalCopy.name = "Lion" + (i+1).ToString(); 
         }
 
-        StartCoroutine(ResizeSquare());  
+        for(int i=0; i < (int)Densities.HYENA; i++){
+            GameObject animalCopy = Instantiate(animal);         
+            Animal scriptCopy = animalCopy.GetComponent<Animal>();            
+            scriptCopy.specie = Animal.Specie.HYENA;
+            animalCopy.name = "Hyena" + (i+1).ToString(); 
+        }
 
-        // TODO: Store the traveled distance   
+        for(int i=0; i < 20; i++){
+            GameObject animalCopy = Instantiate(animal);         
+            Animal scriptCopy = animalCopy.GetComponent<Animal>();            
+            animalCopy.name = "Animal" + (i+1).ToString(); 
+        }
+
+        StartCoroutine(ResizeSquare());    
         
     }
 

@@ -10,7 +10,8 @@ public class Animal : MonoBehaviour{
     public List<Vector3> points;
     public LineRenderer lineRenderer;
     public SpriteRenderer spriteRenderer;
-    public int coordTimeIntervalInMinutes;    
+    public int coordTimeIntervalInMinutes;   
+    public Color color = Color.blue; 
     // Devido à distruibuição homogênea os valores limites variam, geralmente, entre -500 e 500 nos dois eixos
     // Os valores dos limites podem ser escolhidos usando estudos empíricos
     public Dictionary<string, float> limits = new Dictionary<string, float>(){
@@ -23,7 +24,8 @@ public class Animal : MonoBehaviour{
         LION,
         ZEBRA,
         HYENA,
-        BUFFALO
+        BUFFALO,
+        UNDEFINED
     };    
     public enum Feed {
         HERBIVORE,
@@ -38,7 +40,7 @@ public class Animal : MonoBehaviour{
     public Gender gender;
     public int age; // months    
     public int stamina = 100;
-    public Specie specie; // enum
+    public Specie specie = Specie.UNDEFINED; // enum
     public bool interacting = false;
     public float travelledDistance = 0;
     public int socialStatus; // (current) enum
@@ -61,13 +63,15 @@ public class Animal : MonoBehaviour{
 
     // Start is called before the first frame update
     void Start(){
+        StartCoroutine(InitializeAnimal());
+
         float mu = 2.5f;
         float x = UnityEngine.Random.Range(limits["L"], limits["R"]);
         float y = UnityEngine.Random.Range(limits["B"], limits["T"]);     
 
         int steps = (int)(60 / coordTimeIntervalInMinutes) * 24 * timeScaleInDays; // times per hour * 24 hours * days
 
-        points = simm_levy(steps, mu, new Vector3(x, y, -0.5f));
+        points = SimmLevy(steps, mu, new Vector3(x, y, -0.5f));
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         Sprite circle = spriteRenderer.sprite; // set the sprite
@@ -123,16 +127,16 @@ public class Animal : MonoBehaviour{
             foreach(var animal in animalsInRange){
                 // GameObject go = animal.gameObject;
                 if(animal.name != name){
-                    // print(name + " encontrou " + animal.name);
+                    print(name + " encontrou " + animal.name);
                     interacting = true;                
                     break;
                 }
             }    
             if(interacting){
-                spriteRenderer.color = Color.Lerp(Color.blue, Color.red, Mathf.PingPong(Time.time*2, 1));
+                spriteRenderer.color = Color.Lerp(color, Color.red, Mathf.PingPong(Time.time*2, 1));
             }    
             if(animalsInRange.Length == 1){ // just the own element
-                spriteRenderer.color = Color.blue;
+                spriteRenderer.color = color;
                 interacting = false;
             }
 
@@ -141,7 +145,7 @@ public class Animal : MonoBehaviour{
         else print("Traveled distance by " + name + ": " + travelledDistance);
     }
 
-    List<Vector3> simm_levy(int steps, float mu, Vector3 x0){ // Run the simulate e return Vector3 coordinates
+    List<Vector3> SimmLevy(int steps, float mu, Vector3 x0){ // Run the simulate e return Vector3 coordinates
         float pi = 3.141592f;
         List<float> x = new List<float>();
         List<float> y = new List<float>();
@@ -173,7 +177,7 @@ public class Animal : MonoBehaviour{
 
         float maxX, minX, maxY, minY;
 
-        var cX = cumulative_sum(x); // Cumulative sum of coordinates (correlated and coherent movements)
+        var cX = CumulativeSum(x); // Cumulative sum of coordinates (correlated and coherent movements)
         x = cX.Item1; // x coordinates
         if(cX.Item2 < Initializing.valuesX.Item1)
             minX = cX.Item2;
@@ -183,7 +187,7 @@ public class Animal : MonoBehaviour{
         else maxX = Initializing.valuesX.Item2;
         Initializing.valuesX = new Tuple<float, float>(minX, maxX);
 
-        var cY = cumulative_sum(y);
+        var cY = CumulativeSum(y);
         y = cY.Item1; // y coordinates
         if(cY.Item2 < Initializing.valuesY.Item1)
             minY = cY.Item2;
@@ -191,21 +195,17 @@ public class Animal : MonoBehaviour{
         if(cY.Item3 > Initializing.valuesY.Item2)
             maxY = cY.Item3;
         else maxY = Initializing.valuesY.Item2;
-        Initializing.valuesY = new Tuple<float, float>(minY, maxY);
-
-        // print("valuesX: " + Initializing.valuesX.Item1 + " " + Initializing.valuesX.Item2);
-        // print("valuesY: " + Initializing.valuesY.Item1 + " " + Initializing.valuesY.Item2);
+        Initializing.valuesY = new Tuple<float, float>(minY, maxY);        
 
         List<Vector3> points = new List<Vector3>();
         for (int i = 0; i < x.Count; i++){ // Create the Vector3 coordinates
             points.Add(new Vector3(x[i], y[i], -0.5f));
-            // Debug.Log(i + ": " + x[i] + "; " + y[i]);
         }
 
         return points;
     }
 
-    Tuple<List<float>, float, float> cumulative_sum(List<float> list){
+    Tuple<List<float>, float, float> CumulativeSum(List<float> list){
         List<float> coord = new List<float>();
         float max = Int32.MinValue, min = Int32.MaxValue;
         coord.Add(list[0]);
@@ -220,24 +220,44 @@ public class Animal : MonoBehaviour{
         return new Tuple<List<float>, float, float>(coord, min, max);
     }
 
+    IEnumerator InitializeAnimal(){
+        yield return new WaitWhile(() => specie == Specie.UNDEFINED);
+        
+        switch (specie){
+            case Specie.LION:
+                InitializeLion();
+                break;
+            case Specie.ZEBRA:
+                InitializeZebra();
+                break;
+            case Specie.HYENA:
+                InitializeHyena();
+                break;
+            case Specie.BUFFALO:
+                InitializeBuffalo();
+                break;
+        }
+    }
+
     void InitializeLion(){
-        // age; // random        
-        specie = Specie.LION;
+        // age; // random                
         // gender; // random
         // socialStatus; // random
+        color = Color.yellow;
+        spriteRenderer.color = Color.yellow;
 
         // Specie Attributes
         feed = Feed.CARNIVORE;
         deathRate = 10;
         averageSpeed = 4;
-        // numberChildrens; // random
+        // numberChildrens = 1-4 (3); // random
         deathRateChildrens = 60;
         gestationTime = 110;
         survivalTime = 168;
-        // sexualMaturity; // dependent of gender
+        // sexualMaturity = 5/4; // m/f dependent of gender
         timeBetweenBirths = 24;
         populationDensity = 12;
-        // dailyTravelledDistance; // random
+        // dailyTravelledDistance = 4.5-15; // random
         groupHuntingSuccessRate = 30;
         individualHuntingSuccessRate = 17;
         targets = new List<Specie> {
@@ -247,7 +267,30 @@ public class Animal : MonoBehaviour{
     }
 
     void InitializeHyena(){
+        // age; // random                
+        // gender; // random
+        // socialStatus; // random
+        color = Color.green;
+        spriteRenderer.color = Color.green;
 
+        // Specie Attributes
+        feed = Feed.CARNIVORE;
+        deathRate = 14;
+        averageSpeed = 10;
+        // numberChildrens = 1-4 (2); // random
+        // deathRateChildrens = 40-50; // random
+        gestationTime = 112;
+        survivalTime = 300;
+        // sexualMaturity = 21/36; // m/f dependent of gender
+        timeBetweenBirths = 15;
+        populationDensity = 12;
+        // dailyTravelledDistance = 27-80 (27-40); // random
+        groupHuntingSuccessRate = 34;
+        individualHuntingSuccessRate = 29;
+        targets = new List<Specie> {
+            Specie.BUFFALO,
+            Specie.ZEBRA
+        };
     }
 
     void InitializeZebra(){
