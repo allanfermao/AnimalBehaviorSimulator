@@ -44,6 +44,7 @@ public class Animal : MonoBehaviour{
     public bool interacting = false;
     public float travelledDistance = 0;
     public int socialStatus; // (current) enum
+    public List<string> huntingTargetsFailed = new List<string>();
 
     // Specie Attributes
     public Feed feed;
@@ -52,13 +53,13 @@ public class Animal : MonoBehaviour{
     public int numberChildrens; 
     public int deathRateChildrens;
     public int gestationTime; // days
-    public int survivalTime; // months
+    public int maxSurvivalTime; // months
     public int sexualMaturity; // months
     public int timeBetweenBirths; // months
     public int populationDensity; // per 100km²
     public float dailyTravelledDistance; // km/24h
-    public int groupHuntingSuccessRate; // per cent
-    public int individualHuntingSuccessRate; // per cent
+    public float groupHuntingSuccessRate; 
+    public float individualHuntingSuccessRate; 
     public List<Specie> targets;
 
     // Start is called before the first frame update
@@ -78,24 +79,6 @@ public class Animal : MonoBehaviour{
 
         transform.position = points[0]; // set initial position
 
-        // Render the walks
-
-        // lineRenderer = GameObject.Find("LineRenderer").GetComponent<LineRenderer>();
-        // LineRenderer lineRendererC = Instantiate(lineRenderer);
-        // lineRendererC.positionCount = steps;
-        
-        // int i = 0;
-        // foreach (var item in points){ // Create points
-        //     GameObject go = new GameObject();
-        //     go.transform.position = item;
-        //     go.transform.localScale = new Vector3(2, 2, 0);
-        //     SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        //     sr.color = Color.red;
-        //     sr.sprite = circle;
-
-        //     lineRendererC.SetPosition(i, item);
-        //     i++;
-        // }
     }
 
     // Update is called once per frame
@@ -124,25 +107,55 @@ public class Animal : MonoBehaviour{
                 stepCount++;      
 
             Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y), 50f);            
+            foreach(var animalName in new List<string>(huntingTargetsFailed)){ // remove target of vector of fails if is out of the range
+                if(!Array.Exists(animalsInRange, x => x.name == animalName))                
+                    huntingTargetsFailed.Remove(animalName);
+            }
             foreach(var animal in animalsInRange){
-                // GameObject go = animal.gameObject;
-                if(animal.name != name){
-                    print(name + " encontrou " + animal.name);
-                    interacting = true;                
-                    break;
+                Animal animalS = animal.gameObject.GetComponent<Animal>();
+                if(animal.name != name && !huntingTargetsFailed.Exists(x => x == animal.name) && animalS.stamina != 0){  // only if the animals not have interacted previously and failed
+                    // proceed just if animal is interacting and interacting with me
+                    if(feed == Feed.CARNIVORE && targets.Contains(animalS.specie)){
+                        interacting = true;  
+                        float chance = UnityEngine.Random.Range(0.000001f, 1f);
+                        if(chance <= individualHuntingSuccessRate){ // success 
+                            // TO DO: Usar taxa de sucesso. Avaliar possibilidade de caça em grupo e individual:
+                            // avaliar se existe mais algum indivíduo da espécie ou bando no range para ter a taxa de grupo
+                            animalS.enabled = false; // disable script of dead animal
+                            animalS.spriteRenderer.color = Color.grey; 
+                            animalS.stamina = 0;
+                            interacting = false;
+                            spriteRenderer.color = color;
+                            print(name + " matou " + animal.name);
+                            break;
+                        }
+                        else{ // fail
+                            // interacting = false;
+                            // por não setar interacting pra false em falha, o animal continua interagindo com o outro
+                            // mesmo que e outro já tenho morrido. 
+                            huntingTargetsFailed.Add(animal.name);
+                            print(name + " falhou com " + animal.name);
+                        }                        
+                    }                    
                 }
             }    
             if(interacting){
                 spriteRenderer.color = Color.Lerp(color, Color.red, Mathf.PingPong(Time.time*2, 1));
-            }    
-            if(animalsInRange.Length == 1){ // just the own element
+            }  
+            else{
+                spriteRenderer.color = color;
+            }  
+            if(animalsInRange.Length == 1){ // just the own element                
                 spriteRenderer.color = color;
                 interacting = false;
             }
 
             Array.Clear(animalsInRange, 0, animalsInRange.Length);
         }    
-        else print("Traveled distance by " + name + ": " + travelledDistance);
+        else{
+            print("Traveled distance by " + name + ": " + travelledDistance);
+            gameObject.GetComponent<Animal>().enabled = false;
+        }    
     }
 
     List<Vector3> SimmLevy(int steps, float mu, Vector3 x0){ // Run the simulate e return Vector3 coordinates
@@ -154,7 +167,7 @@ public class Animal : MonoBehaviour{
 
         for (int i = 0; i < steps - 1; i++){
             float ang = (float)UnityEngine.Random.Range(-pi, pi); // Get random angles (uniform distribuiton)
-            float dist = (float)System.Math.Pow(UnityEngine.Random.Range(0f, 1.001f), (1 / (1 - mu))); // Get distance of steps (levy distribution)            
+            float dist = (float)System.Math.Pow(UnityEngine.Random.Range(0.000001f, 1f), (1 / (1 - mu))); // Get distance of steps (levy distribution)            
 
             float xCoord = (float)System.Math.Cos(ang) * dist;
             // ########################## TO REMAKE THE MAX STEP SIZE LOGIC #####################################
@@ -240,26 +253,27 @@ public class Animal : MonoBehaviour{
     }
 
     void InitializeLion(){
-        // age; // random                
-        // gender; // random
-        // socialStatus; // random
+        System.Random rand = new System.Random();       
         color = Color.yellow;
         spriteRenderer.color = Color.yellow;
-
-        // Specie Attributes
+        int[] childs = {1,2,3,3,3,3,3,4,4,4};
+        
+        gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
         feed = Feed.CARNIVORE;
-        deathRate = 10;
+        // deathRate = 10;
         averageSpeed = 4;
-        // numberChildrens = 1-4 (3); // random
-        deathRateChildrens = 60;
+        numberChildrens = gender == Gender.F && rand.NextDouble() < 0.1f ? childs[rand.Next(0,11)] : 0; // apenas quando engravidar ou se iniciar grávida (10% de chance)
+        // deathRateChildrens = 60;
         gestationTime = 110;
-        survivalTime = 168;
-        // sexualMaturity = 5/4; // m/f dependent of gender
+        maxSurvivalTime = 216;
+        age = rand.Next(0, maxSurvivalTime+1);  // repensar idade com base no número de filhotes do bando
+        sexualMaturity = gender == Gender.M ? 5 : 4;
         timeBetweenBirths = 24;
         populationDensity = 12;
         // dailyTravelledDistance = 4.5-15; // random
-        groupHuntingSuccessRate = 30;
-        individualHuntingSuccessRate = 17;
+        groupHuntingSuccessRate = 0.30f;
+        individualHuntingSuccessRate = 0.17f;
+        // socialStatus; // random
         targets = new List<Specie> {
             Specie.BUFFALO,
             Specie.ZEBRA
@@ -267,38 +281,75 @@ public class Animal : MonoBehaviour{
     }
 
     void InitializeHyena(){
-        // age; // random                
-        // gender; // random
-        // socialStatus; // random
+        System.Random rand = new System.Random();       
         color = Color.green;
-        spriteRenderer.color = Color.green;
-
-        // Specie Attributes
+        spriteRenderer.color = Color.green; 
+        int[] childs = {1,1,1,2,2,2,2,2,3,4};
+        
+        gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
         feed = Feed.CARNIVORE;
-        deathRate = 14;
-        averageSpeed = 10;
-        // numberChildrens = 1-4 (2); // random
+        // deathRate = 14;
+        averageSpeed = 10;        
+        numberChildrens = gender == Gender.F && rand.NextDouble() < 0.1f ? childs[rand.Next(0,11)] : 0; // apenas quando engravidar ou se iniciar grávida (10% de chance)
         // deathRateChildrens = 40-50; // random
         gestationTime = 112;
-        survivalTime = 300;
-        // sexualMaturity = 21/36; // m/f dependent of gender
+        maxSurvivalTime = 300;
+        age = rand.Next(0, maxSurvivalTime+1);        
+        sexualMaturity = gender == Gender.M ? 21 : 36;
         timeBetweenBirths = 15;
         populationDensity = 12;
         // dailyTravelledDistance = 27-80 (27-40); // random
-        groupHuntingSuccessRate = 34;
-        individualHuntingSuccessRate = 29;
+        groupHuntingSuccessRate = 0.34f;
+        individualHuntingSuccessRate = 0.29f;
+        // socialStatus; // random        
         targets = new List<Specie> {
             Specie.BUFFALO,
             Specie.ZEBRA
-        };
+        };        
     }
 
     void InitializeZebra(){
+        System.Random rand = new System.Random();       
+        color = Color.blue;
+        spriteRenderer.color = Color.blue;
 
+        gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
+        feed = Feed.HERBIVORE;
+        // deathRate = 14;
+        averageSpeed = 5;
+        numberChildrens = gender == Gender.F ? 1 : 0;
+        // deathRateChildrens = 50; // random
+        gestationTime = 375;
+        maxSurvivalTime = 240;
+        age = rand.Next(0, maxSurvivalTime+1);        
+        sexualMaturity = gender == Gender.M ? 54 : 24; 
+        timeBetweenBirths = 12;
+        populationDensity = 700;
+        dailyTravelledDistance = 17; 
+        // socialStatus; // random
+        targets = new List<Specie>();
     }
 
     void InitializeBuffalo(){
+        System.Random rand = new System.Random();       
+        color = Color.black;
+        spriteRenderer.color = Color.black;
 
+        gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
+        feed = Feed.HERBIVORE;
+        // deathRate = 14;
+        averageSpeed = 4;
+        numberChildrens = gender == Gender.F && rand.NextDouble() < 0.1f ? rand.NextDouble() < 0.9f ? 1 : 2 : 0; // 1 (90%)
+        // deathRateChildrens = 40-50; // random
+        gestationTime = 340;
+        maxSurvivalTime = 264;
+        age = UnityEngine.Random.Range(0, maxSurvivalTime);        
+        sexualMaturity = gender == Gender.M ? 54 : 60; 
+        timeBetweenBirths = 18;
+        populationDensity = 430;
+        // dailyTravelledDistance = 17; 1.2-8
+        // socialStatus; // random
+        targets = new List<Specie>();
     }
 
     void OnDrawGizmosSelected (){
@@ -306,10 +357,5 @@ public class Animal : MonoBehaviour{
         Gizmos.DrawWireSphere (transform.position, 50f);
     }
 
-    IEnumerator ChangeColor(float time){
-        yield return new WaitForSeconds(time);
-
-        spriteRenderer.color = spriteRenderer.color == Color.blue ? Color.red : Color.blue;
-    }
 }
 

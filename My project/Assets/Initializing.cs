@@ -41,10 +41,18 @@ public class Initializing : MonoBehaviour{
             animalCopy.name = "Hyena" + (i+1).ToString(); 
         }
 
-        for(int i=0; i < 20; i++){
+        for(int i=0; i < 50; i++){
+            GameObject animalCopy = Instantiate(animal);         
+            Animal scriptCopy = animalCopy.GetComponent<Animal>();  
+            scriptCopy.specie = Animal.Specie.BUFFALO;
+            animalCopy.name = "Buffalo" + (i+1).ToString(); 
+        }
+
+        for(int i=0; i < 50; i++){
             GameObject animalCopy = Instantiate(animal);         
             Animal scriptCopy = animalCopy.GetComponent<Animal>();            
-            animalCopy.name = "Animal" + (i+1).ToString(); 
+            scriptCopy.specie = Animal.Specie.ZEBRA;
+            animalCopy.name = "Zebra" + (i+1).ToString(); 
         }
 
         StartCoroutine(ResizeSquare());    
@@ -53,8 +61,8 @@ public class Initializing : MonoBehaviour{
 
     // Update is called once per frame
     void Update(){
-        print("Init valuesX: " + valuesX.Item1 + " " + valuesX.Item2);
-        print("Init valuesY: " + valuesY.Item1 + " " + valuesY.Item2);
+        // print("Init valuesX: " + valuesX.Item1 + " " + valuesX.Item2);
+        // print("Init valuesY: " + valuesY.Item1 + " " + valuesY.Item2);
     }
 
     void FixedUpdate(){                        
