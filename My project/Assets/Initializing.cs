@@ -5,14 +5,12 @@ using System;
 
 public class Initializing : MonoBehaviour{
     public GameObject animal;
-    public List<Vector3> points;
     public int timeScaleInDays = 30;
-    public int coordTimeIntervalInMinutes = 30;
+    public static int coordTimeIntervalInMinutes = 30;
     // max and min values
     public static Tuple<float, float> valuesX = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public static Tuple<float, float> valuesY = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public int nAnimals = 3;
-    public int stepCount = 1;
     public enum Densities {
         LION = 12,
         HYENA = 12,
@@ -54,6 +52,8 @@ public class Initializing : MonoBehaviour{
             scriptCopy.specie = Animal.Specie.ZEBRA;
             animalCopy.name = "Zebra" + (i+1).ToString(); 
         }
+
+        // Destroy(animal);
 
         StartCoroutine(ResizeSquare());    
         

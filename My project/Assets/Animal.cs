@@ -8,10 +8,11 @@ public class Animal : MonoBehaviour{
     public int stepCount = 1;
     public int timeScaleInDays;
     public List<Vector3> points;
+    public Color color = Color.blue; 
     public LineRenderer lineRenderer;
     public SpriteRenderer spriteRenderer;
     public int coordTimeIntervalInMinutes;   
-    public Color color = Color.blue; 
+    public GameObject animal;
     // Devido à distruibuição homogênea os valores limites variam, geralmente, entre -500 e 500 nos dois eixos
     // Os valores dos limites podem ser escolhidos usando estudos empíricos
     public Dictionary<string, float> limits = new Dictionary<string, float>(){
@@ -40,10 +41,14 @@ public class Animal : MonoBehaviour{
     public Gender gender;
     public int age; // months    
     public int stamina = 100;
-    public Specie specie = Specie.UNDEFINED; // enum
+    public int currentNChilds = 0;
+    public bool isPregnant = false;
     public bool interacting = false;
     public float travelledDistance = 0;
+    public string interactingWith = "none";
     public int socialStatus; // (current) enum
+    public Specie specie = Specie.UNDEFINED; // enum
+    public int timeOfCurrentGestation = -1; // minutes
     public List<string> huntingTargetsFailed = new List<string>();
 
     // Specie Attributes
@@ -65,6 +70,7 @@ public class Animal : MonoBehaviour{
     // Start is called before the first frame update
     void Start(){
         StartCoroutine(InitializeAnimal());
+        animal = GameObject.Find("AnimalBase");
 
         float mu = 2.5f;
         float x = UnityEngine.Random.Range(limits["L"], limits["R"]);
@@ -90,6 +96,10 @@ public class Animal : MonoBehaviour{
         float speed = 50f;
         float step = speed * Time.fixedDeltaTime; // Set the step size
 
+        // O modo ideal de implementação é fazer com que passe o mesmo tempo entre cada passo, o que significa ajustar 
+        // a velocidade com base no tamanho do passo a ser dado. Passos mais curtos significam velocidades menores, já
+        // que todos são executados no mesmo tempo
+
         // TODO: avaliar a distância percorrida por um indivíduo durante um espaço de tempo criar um somatório 
         // dos tamanhos de passos até atingir a distância total da simulação, ajustando a velocidade, sem pausas. 
         // Para que todos os indivíduos terminem juntos, uma abordagem é parar quando o primeiro finalizar.
@@ -113,44 +123,79 @@ public class Animal : MonoBehaviour{
             }
             foreach(var animal in animalsInRange){
                 Animal animalS = animal.gameObject.GetComponent<Animal>();
-                if(animal.name != name && !huntingTargetsFailed.Exists(x => x == animal.name) && animalS.stamina != 0){  // only if the animals not have interacted previously and failed
-                    // proceed just if animal is interacting and interacting with me
-                    if(feed == Feed.CARNIVORE && targets.Contains(animalS.specie)){
-                        interacting = true;  
-                        float chance = UnityEngine.Random.Range(0.000001f, 1f);
-                        if(chance <= individualHuntingSuccessRate){ // success 
-                            // TO DO: Usar taxa de sucesso. Avaliar possibilidade de caça em grupo e individual:
-                            // avaliar se existe mais algum indivíduo da espécie ou bando no range para ter a taxa de grupo
-                            animalS.enabled = false; // disable script of dead animal
-                            animalS.spriteRenderer.color = Color.grey; 
-                            animalS.stamina = 0;
-                            interacting = false;
-                            spriteRenderer.color = color;
-                            print(name + " matou " + animal.name);
-                            break;
-                        }
-                        else{ // fail
-                            // interacting = false;
-                            // por não setar interacting pra false em falha, o animal continua interagindo com o outro
-                            // mesmo que e outro já tenho morrido. 
-                            huntingTargetsFailed.Add(animal.name);
-                            print(name + " falhou com " + animal.name);
-                        }                        
-                    }                    
-                }
+                // MOVEMENT ROUTINE
+                if(animal.name != name){
+                    if(!huntingTargetsFailed.Exists(x => x == animal.name) && animalS.stamina != 0){  // only if the animals not have interacted previously and failed
+                        // proceed just if animal is interacting and interacting with me
+                        if(!animalS.interacting || (animalS.interacting && animalS.interactingWith == name)){
+                            if(feed == Feed.CARNIVORE && targets.Contains(animalS.specie)){
+                                interacting = true;  
+                                interactingWith = animal.name;
+                                float chance = UnityEngine.Random.Range(0.000001f, 1f);
+                                if(chance <= individualHuntingSuccessRate){ // success 
+                                    // TO DO: Usar taxa de sucesso. Avaliar possibilidade de caça em grupo e individual:
+                                    // avaliar se existe mais algum indivíduo da espécie ou bando no range para ter a taxa de grupo
+                                    animalS.enabled = false; // disable script of dead animal
+                                    animalS.spriteRenderer.color = Color.grey; 
+                                    animalS.stamina = 0;
+                                    interacting = false;
+                                    interactingWith = "none";
+                                    spriteRenderer.color = color;
+                                    print(name + " matou " + animal.name);
+                                    break;
+                                }
+                                else{ // fail
+                                    // interacting = false;
+                                    // por não setar interacting pra false em falha, o animal continua interagindo com o outro
+                                    // mesmo que e outro já tenho morrido. 
+                                    huntingTargetsFailed.Add(animal.name);
+                                    print(name + " falhou com " + animal.name);
+                                }                        
+                            }     
+                        }                   
+                    }  
+                    // REPRODUCTIVE ROUTINE             
+                    if(animalS.specie == specie && gender == Gender.M && animalS.gender == Gender.F && !animalS.isPregnant){                        
+                        // TO DO: evaluate sexual maturity
+                        animalS.isPregnant = true;
+                        animalS.timeOfCurrentGestation = 0;            
+                        print(animalS.name + " copulou com " + name + " e está prenhe");            
+                    }
+                }                     
             }    
+
             if(interacting){
                 spriteRenderer.color = Color.Lerp(color, Color.red, Mathf.PingPong(Time.time*2, 1));
             }  
             else{
                 spriteRenderer.color = color;
             }  
+
             if(animalsInRange.Length == 1){ // just the own element                
                 spriteRenderer.color = color;
                 interacting = false;
+                interactingWith = "none";
             }
 
             Array.Clear(animalsInRange, 0, animalsInRange.Length);
+
+            // REPRODUCTIVE ROUTINE (INDIVIDUAL)
+            if(gender == Gender.F && isPregnant && Vector3.Distance(transform.position, points[stepCount-1]) == 0f){                
+                timeOfCurrentGestation += Initializing.coordTimeIntervalInMinutes; // in minutes
+                int timeInDays = (int)((timeOfCurrentGestation / 60) / 24);
+                if(timeInDays >= gestationTime){ // ready to born
+                    for(int i=0; i < numberChildrens; i++){
+                        GameObject child = Instantiate(animal);
+                        Animal scriptChild = child.GetComponent<Animal>();
+                        scriptChild.specie = specie;
+                        child.name = name + '_' + (currentNChilds+1).ToString(); 
+                        print(name + " deu à luz " + child.name);                        
+                        currentNChilds++;
+                    }
+                    timeOfCurrentGestation = -1;
+                    isPregnant = false;
+                }
+            }
         }    
         else{
             print("Traveled distance by " + name + ": " + travelledDistance);
@@ -260,9 +305,10 @@ public class Animal : MonoBehaviour{
         
         gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
         feed = Feed.CARNIVORE;
+        // isPregnant = //random
         // deathRate = 10;
         averageSpeed = 4;
-        numberChildrens = gender == Gender.F && rand.NextDouble() < 0.1f ? childs[rand.Next(0,11)] : 0; // apenas quando engravidar ou se iniciar grávida (10% de chance)
+        numberChildrens = gender == Gender.F ? childs[rand.Next(0,10)] : 0;
         // deathRateChildrens = 60;
         gestationTime = 110;
         maxSurvivalTime = 216;
@@ -288,9 +334,10 @@ public class Animal : MonoBehaviour{
         
         gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
         feed = Feed.CARNIVORE;
+        // isPregnant = //random
         // deathRate = 14;
         averageSpeed = 10;        
-        numberChildrens = gender == Gender.F && rand.NextDouble() < 0.1f ? childs[rand.Next(0,11)] : 0; // apenas quando engravidar ou se iniciar grávida (10% de chance)
+        numberChildrens = gender == Gender.F ? childs[rand.Next(0,10)] : 0;
         // deathRateChildrens = 40-50; // random
         gestationTime = 112;
         maxSurvivalTime = 300;
@@ -315,6 +362,7 @@ public class Animal : MonoBehaviour{
 
         gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
         feed = Feed.HERBIVORE;
+        // isPregnant = //random
         // deathRate = 14;
         averageSpeed = 5;
         numberChildrens = gender == Gender.F ? 1 : 0;
@@ -337,9 +385,10 @@ public class Animal : MonoBehaviour{
 
         gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
         feed = Feed.HERBIVORE;
+        // isPregnant = //random
         // deathRate = 14;
         averageSpeed = 4;
-        numberChildrens = gender == Gender.F && rand.NextDouble() < 0.1f ? rand.NextDouble() < 0.9f ? 1 : 2 : 0; // 1 (90%)
+        numberChildrens = gender == Gender.F ? rand.NextDouble() < 0.9f ? 1 : 2 : 0; // 1 (90%)
         // deathRateChildrens = 40-50; // random
         gestationTime = 340;
         maxSurvivalTime = 264;
