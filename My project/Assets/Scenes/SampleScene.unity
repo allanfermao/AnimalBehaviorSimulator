@@ -569,8 +569,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animal: {fileID: 170989169}
-  points: []
-  timeScaleInDays: 30
-  coordTimeIntervalInMinutes: 30
-  nAnimals: 50
-  stepCount: 1
+  timeScaleInDays: 120
