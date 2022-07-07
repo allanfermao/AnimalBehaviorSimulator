@@ -39,14 +39,14 @@ public class Initializing : MonoBehaviour{
             animalCopy.name = "Hyena" + (i+1).ToString(); 
         }
 
-        for(int i=0; i < 50; i++){
+        for(int i=0; i < (int)Densities.BUFFALO; i++){
             GameObject animalCopy = Instantiate(animal);         
             Animal scriptCopy = animalCopy.GetComponent<Animal>();  
             scriptCopy.specie = Animal.Specie.BUFFALO;
             animalCopy.name = "Buffalo" + (i+1).ToString(); 
         }
 
-        for(int i=0; i < 50; i++){
+        for(int i=0; i < (int)Densities.ZEBRA; i++){
             GameObject animalCopy = Instantiate(animal);         
             Animal scriptCopy = animalCopy.GetComponent<Animal>();            
             scriptCopy.specie = Animal.Specie.ZEBRA;
