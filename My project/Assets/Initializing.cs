@@ -16,6 +16,8 @@ public class Initializing : MonoBehaviour{
         BUFFALO = 430,
         ZEBRA = 700
     };
+    public static List<Animal> femaleLions = new List<Animal>();    
+    public static List<Animal> femaleHyenas = new List<Animal>();
 
     // Start is called before the first frame update
     void Start(){
@@ -39,7 +41,7 @@ public class Initializing : MonoBehaviour{
             animalCopy.name = "Hyena" + (i+1).ToString(); 
         }
 
-        for(int i=0; i < (int)Densities.BUFFALO; i++){
+        for(int i=0; i < 1000; i++){
             GameObject animalCopy = Instantiate(animal);         
             Animal scriptCopy = animalCopy.GetComponent<Animal>();  
             scriptCopy.specie = Animal.Specie.BUFFALO;

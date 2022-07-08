@@ -120,8 +120,9 @@ public class Animal : MonoBehaviour{
 
             if(Vector3.Distance(transform.position, points[stepCount]) == 0f)
                 stepCount++;      
-
-            Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y), 50f);            
+///////////
+            if(stamina != 100 || gender == Gender.M){ // stamina is not full or is active in sex (male) 
+            Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y), 20f);            
             if(huntingTargetsFailed.Count > 0){
                 foreach(var animalName in new List<string>(huntingTargetsFailed)){ // remove target of vector of fails if is out of the range
                     if(!Array.Exists(animalsInRange, x => x.name == animalName))                
@@ -132,7 +133,7 @@ public class Animal : MonoBehaviour{
                 Animal animalS = animal.gameObject.GetComponent<Animal>();
                 // PREDATION ROUTINE
                 if(animal.name != name){
-                    if(feed == Feed.CARNIVORE && !huntingTargetsFailed.Exists(x => x == animal.name) && !animalS.isDead && stamina <= (100 - 2*dailyLossStamina)){  // only if the animals not have interacted previously and failed                        
+                    if(feed == Feed.CARNIVORE && !huntingTargetsFailed.Exists(x => x == animal.name) && !animalS.isDead && stamina <= (100 - dailyLossStamina)){  // only if the animals not have interacted previously and failed                        
                         // proceed just if stamina is not high                    
                         if(!animalS.interacting && targets.Contains(animalS.specie) && age >= timeToIndependence){ // only if animal is independent
                             interacting = true;  
@@ -166,6 +167,11 @@ public class Animal : MonoBehaviour{
                         }                                               
                     } 
                     // scavenger possibility
+                    else if(feed == Feed.CARNIVORE && animalS.isDead && animalS.specie != specie && animalS.stamina == 10 && stamina <= (100 - dailyLossStamina)){
+                        stamina = 100;
+                        animalS.stamina = 0;
+                        print(name + " se alimentou de " + animal.name);
+                    }
 
                     // REPRODUCTIVE ROUTINE             
                     if(animalS.specie == specie && gender == Gender.M && animalS.gender == Gender.F && !animalS.isPregnant && !animalS.isDead){ 
@@ -191,13 +197,14 @@ public class Animal : MonoBehaviour{
             // }
 
             Array.Clear(animalsInRange, 0, animalsInRange.Length);
+            }
 
             // REPRODUCTIVE ROUTINE (INDIVIDUAL)
             if(gender == Gender.F && isPregnant && Vector3.Distance(transform.position, points[stepCount-1]) == 0f){                
                 timeOfCurrentGestation += coordTimeIntervalInMinutes; // in minutes
                 int timeInDays = (int)((timeOfCurrentGestation / 60) / 24);
-                if(timeInDays >= gestationTime){ // ready to born
-                    System.Random rand = new System.Random(); 
+                if(timeInDays >= gestationTime){ // ready to born                    
+                    generateNumberChildrens();
                     for(int i=0; i < numberChildrens; i++){
                         GameObject child = Instantiate(animal);
                         Destroy(child.GetComponent<Animal>());
@@ -229,12 +236,11 @@ public class Animal : MonoBehaviour{
                     stamina -= dailyLossStamina; // REAVALIAR ESSE VALOR 
 
                 // DEATH ROUTINE (natural causes)
-                // evaluate stamina, maxSurvivalTime, deathRate and deathRateChildrens, 
                 if((stamina <= 5 || age > maxSurvivalTime)){
                     isDead = true;
                     stamina = 10; // can be consumed by carnivores and scavengers
                     spriteRenderer.color = Color.grey; 
-                    gameObject.GetComponent<Animal>().enabled = false;
+                    this.enabled = false;
                     print(name + " morreu por causas naturais");
                     if(gender == Gender.F && childrens.Count >= 0)
                         killChildrens();
@@ -259,6 +265,22 @@ public class Animal : MonoBehaviour{
                 print(child.name + " morreu em razão da morte da mãe");
             }
         }
+    }
+
+    void generateNumberChildrens(){
+        int[] lionP = {1,2,3,3,3,3,3,4,4,4};
+        int[] hyenaP = {1,1,1,2,2,2,2,2,3,4};
+        System.Random rand = new System.Random();   
+
+        if(specie == Specie.LION)
+            numberChildrens = lionP[rand.Next(0,10)];        
+        else if(specie == Specie.HYENA)
+            numberChildrens = hyenaP[rand.Next(0,10)];  
+        else if(specie == Specie.ZEBRA) 
+            numberChildrens = 1;
+        else if(specie == Specie.BUFFALO)
+            numberChildrens = rand.NextDouble() < 0.9f ? 1 : 2;
+        else numberChildrens = 0;
     }
 
     List<Vector3> SimmLevy(int steps, float mu, Vector3 x0){ // Run the simulate e return Vector3 coordinates
@@ -362,19 +384,31 @@ public class Animal : MonoBehaviour{
         int[] childs = {1,2,3,3,3,3,3,4,4,4};
         
         gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
-        feed = Feed.CARNIVORE;
-        // isPregnant = //random
-        // evaluate sexualMaturity to set isPregnant and add to currentNChilds and add to childrens
+        feed = Feed.CARNIVORE;        
         // deathRate = 10;
+        // deathRateChildrens = 60;
         timeToIndependence = 18;
         averageSpeed = 4;
         numberChildrens = gender == Gender.F ? childs[rand.Next(0,10)] : 0;
-        // deathRateChildrens = 60;
         gestationTime = 110;
         maxSurvivalTime = 216;
         age = rand.Next(0, maxSurvivalTime+1);  // repensar idade com base no número de filhotes do bando
         // set the mom if is a child
-        sexualMaturity = gender == Gender.M ? 5 : 4;
+        if(age < timeToIndependence){
+            if(Initializing.femaleLions.Count > 0){
+                Animal res = Initializing.femaleLions.Find(x => !x.isDead);
+                if(res) res.childrens.Add(gameObject);
+                else age = timeToIndependence;
+            }
+            else age = timeToIndependence;
+        }
+        sexualMaturity = gender == Gender.M ? 60 : 48;
+        if(gender == Gender.F && age >= sexualMaturity){
+            Initializing.femaleLions.Add(this);
+            isPregnant = rand.NextDouble() < 0.5f ? true : false;
+            timeOfCurrentGestation = rand.Next(0, gestationTime*24*60);
+        }    
+        else isPregnant = false;
         timeBetweenBirths = 24;
         populationDensity = 12;
         // dailyTravelledDistance = 4.5-15; // random
@@ -393,19 +427,31 @@ public class Animal : MonoBehaviour{
         int[] childs = {1,1,1,2,2,2,2,2,3,4};
         
         gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
-        feed = Feed.CARNIVORE;
-        // isPregnant = //random
-        // evaluate sexualMaturity to set isPregnant and add to currentNChilds and add to childrens
+        feed = Feed.CARNIVORE;        
         // deathRate = 14;
+        // deathRateChildrens = 40-50; // random
         timeToIndependence = 12;        
         averageSpeed = 10;        
         numberChildrens = gender == Gender.F ? childs[rand.Next(0,10)] : 0;
-        // deathRateChildrens = 40-50; // random
         gestationTime = 112;
         maxSurvivalTime = 300;
         age = rand.Next(0, maxSurvivalTime+1);    
         // set the mom if is a child    
+        if(age < timeToIndependence){
+            if(Initializing.femaleHyenas.Count > 0){
+                Animal res = Initializing.femaleHyenas.Find(x => !x.isDead);
+                if(res) res.childrens.Add(gameObject);
+                else age = timeToIndependence;
+            }
+            else age = timeToIndependence;
+        }
         sexualMaturity = gender == Gender.M ? 21 : 36;
+        if(gender == Gender.F && age >= sexualMaturity){
+            Initializing.femaleHyenas.Add(this);
+            isPregnant = rand.NextDouble() < 0.5f ? true : false;
+            timeOfCurrentGestation = rand.Next(0, gestationTime*24*60);
+        }    
+        else isPregnant = false;
         timeBetweenBirths = 15;
         populationDensity = 12;
         // dailyTravelledDistance = 27-80 (27-40); // random
@@ -424,17 +470,21 @@ public class Animal : MonoBehaviour{
 
         gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
         feed = Feed.HERBIVORE;
-        // isPregnant = //random
-        // evaluate sexualMaturity to set isPregnant and add to currentNChilds and add to childrens
         // deathRate = 14;        
+        // deathRateChildrens = 50; // random
         averageSpeed = 5;
         numberChildrens = gender == Gender.F ? 1 : 0;
-        // deathRateChildrens = 50; // random
         gestationTime = 375;
         maxSurvivalTime = 240;
-        age = rand.Next(0, maxSurvivalTime+1);     
-        // set the mom if is a child   
-        sexualMaturity = gender == Gender.M ? 54 : 24; 
+        // avaliar a percentual de cada faixa etária na hora de sortear idade. 
+        age = rand.Next(0, maxSurvivalTime+1);             
+        sexualMaturity = gender == Gender.M ? 54 : 24;    
+        if(gender == Gender.F && age >= sexualMaturity){
+            isPregnant = rand.NextDouble() < 0.5f ? true : false;
+            timeOfCurrentGestation = rand.Next(0, gestationTime*24*60);
+        }    
+        else isPregnant = false;
+        isPregnant = rand.NextDouble() < 0.2f ? true : false;        
         timeBetweenBirths = 12;
         populationDensity = 700;
         dailyTravelledDistance = 17; 
@@ -446,27 +496,31 @@ public class Animal : MonoBehaviour{
         color = Color.black;
         spriteRenderer.color = Color.black;
 
-        gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
+        gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;        
         feed = Feed.HERBIVORE;
-        // isPregnant = //random
-        // evaluate sexualMaturity to set isPregnant and add to currentNChilds and add to childrens
         // deathRate = 14;
+        // deathRateChildrens = 40-50; // random
         averageSpeed = 4;
         numberChildrens = gender == Gender.F ? rand.NextDouble() < 0.9f ? 1 : 2 : 0; // 1 (90%)
-        // deathRateChildrens = 40-50; // random
         gestationTime = 340;
         maxSurvivalTime = 264;
-        age = UnityEngine.Random.Range(0, maxSurvivalTime);        
-        sexualMaturity = gender == Gender.M ? 54 : 60; 
+        age = UnityEngine.Random.Range(0, maxSurvivalTime);                
+        sexualMaturity = gender == Gender.M ? 54 : 60;   
+        if(gender == Gender.F && age >= sexualMaturity){
+            isPregnant = rand.NextDouble() < 0.5f ? true : false;
+            timeOfCurrentGestation = rand.Next(0, gestationTime*24*60);
+        }    
+        else isPregnant = false;      
+        isPregnant = rand.NextDouble() < 0.2f ? true : false;        
         timeBetweenBirths = 18;
         populationDensity = 430;
-        // dailyTravelledDistance = 17; 1.2-8
         targets = new List<Specie>();
+        // dailyTravelledDistance = 17; 1.2-8
     }
 
     void OnDrawGizmosSelected (){
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere (transform.position, 50f);
+        Gizmos.DrawWireSphere (transform.position, 20f);
     }
 
 }
