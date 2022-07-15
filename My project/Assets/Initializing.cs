@@ -7,6 +7,11 @@ public class Initializing : MonoBehaviour{
     public GameObject animal;
     public int timeScaleInDays = 120;
     public static int coordTimeIntervalInMinutes = 30;
+    public static List<Animal> lions = new List<Animal>();
+    public static List<Animal> hyenas = new List<Animal>();
+    public static List<Animal> buffalos = new List<Animal>();
+    public static List<Animal> zebras = new List<Animal>();
+    public static int logCount = 0;    
     // max and min values
     public static Tuple<float, float> valuesX = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
     public static Tuple<float, float> valuesY = new Tuple<float, float>(Int32.MaxValue, Int32.MinValue);
@@ -29,28 +34,32 @@ public class Initializing : MonoBehaviour{
 
         for(int i=0; i < (int)Densities.LION; i++){
             GameObject animalCopy = Instantiate(animal);         
-            Animal scriptCopy = animalCopy.GetComponent<Animal>();            
+            Animal scriptCopy = animalCopy.GetComponent<Animal>();     
+            lions.Add(scriptCopy);
             scriptCopy.specie = Animal.Specie.LION;
-            animalCopy.name = "Lion" + (i+1).ToString(); 
+            animalCopy.name = "Lion" + (i+1).ToString();
         }
 
         for(int i=0; i < (int)Densities.HYENA; i++){
             GameObject animalCopy = Instantiate(animal);         
-            Animal scriptCopy = animalCopy.GetComponent<Animal>();            
+            Animal scriptCopy = animalCopy.GetComponent<Animal>();       
+            hyenas.Add(scriptCopy);     
             scriptCopy.specie = Animal.Specie.HYENA;
             animalCopy.name = "Hyena" + (i+1).ToString(); 
         }
 
-        for(int i=0; i < 1000; i++){
+        for(int i=0; i < (int)Densities.BUFFALO; i++){
             GameObject animalCopy = Instantiate(animal);         
             Animal scriptCopy = animalCopy.GetComponent<Animal>();  
+            buffalos.Add(scriptCopy);
             scriptCopy.specie = Animal.Specie.BUFFALO;
             animalCopy.name = "Buffalo" + (i+1).ToString(); 
         }
 
         for(int i=0; i < (int)Densities.ZEBRA; i++){
             GameObject animalCopy = Instantiate(animal);         
-            Animal scriptCopy = animalCopy.GetComponent<Animal>();            
+            Animal scriptCopy = animalCopy.GetComponent<Animal>();      
+            zebras.Add(scriptCopy);      
             scriptCopy.specie = Animal.Specie.ZEBRA;
             animalCopy.name = "Zebra" + (i+1).ToString(); 
         }
@@ -69,6 +78,20 @@ public class Initializing : MonoBehaviour{
 
     void FixedUpdate(){                        
 
+    }
+
+    public static void feedToGroup(Animal.Specie specie){
+        List<Animal> selected = new List<Animal>();
+        if(specie == Animal.Specie.LION){            
+            lions.Sort((x, y) => x.stamina.CompareTo(y.stamina));          
+
+            for(int i=0; i < 3; i++){
+                if((lions[i].stamina < 100) && !lions[i].isDead) {               
+                    print(lions[i].name + '('+ lions[i].stamina + ')' + " se alimentou numa caça em grupo");
+                    lions[i].stamina = 100;
+                }    
+            }    
+        }
     }
 
     // get the max size of square and resize it

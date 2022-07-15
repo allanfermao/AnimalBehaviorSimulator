@@ -6,13 +6,14 @@ using UnityEngine;
 public class Animal : MonoBehaviour{    
 
     public int stepCount = 1;
+    public GameObject animal;
+    public string label;
     public int timeScaleInDays;
     public List<Vector3> points;
     public Color color = Color.blue; 
     public LineRenderer lineRenderer;
     public SpriteRenderer spriteRenderer;
     public int coordTimeIntervalInMinutes;   
-    public GameObject animal;
     // Devido à distruibuição homogênea os valores limites variam, geralmente, entre -500 e 500 nos dois eixos
     // Os valores dos limites podem ser escolhidos usando estudos empíricos
     public Dictionary<string, float> limits = new Dictionary<string, float>(){
@@ -45,7 +46,7 @@ public class Animal : MonoBehaviour{
     public int currentNChilds = 0;
     public bool isPregnant = false;
     public bool interacting = false;
-    public int dailyLossStamina = 15;
+    public int dailyLossStamina = 8;
     public float travelledDistance = 0;
     public Specie specie = Specie.UNDEFINED; // enum
     public int timeOfCurrentGestation = -1; // minutes
@@ -99,6 +100,7 @@ public class Animal : MonoBehaviour{
     }
 
     void FixedUpdate(){
+        label = name;
         float step = speed * Time.fixedDeltaTime; // Set the step size
 
         // O modo ideal de implementação é fazer com que passe o mesmo tempo entre cada passo, o que significa ajustar 
@@ -121,8 +123,8 @@ public class Animal : MonoBehaviour{
             if(Vector3.Distance(transform.position, points[stepCount]) == 0f)
                 stepCount++;      
 ///////////
-            if(stamina != 100 || gender == Gender.M){ // stamina is not full or is active in sex (male) 
-            Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y), 20f);            
+            if(stamina <= (100 - 2*dailyLossStamina) || gender == Gender.M){ // stamina is not full or is active in sex (male) 
+            Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(point: new Vector2(transform.position.x, transform.position.y), radius: 20f, layerMask: Physics2D.DefaultRaycastLayers, minDepth: -0.5f, maxDepth: -0.5f);            
             if(huntingTargetsFailed.Count > 0){
                 foreach(var animalName in new List<string>(huntingTargetsFailed)){ // remove target of vector of fails if is out of the range
                     if(!Array.Exists(animalsInRange, x => x.name == animalName))                
@@ -133,7 +135,7 @@ public class Animal : MonoBehaviour{
                 Animal animalS = animal.gameObject.GetComponent<Animal>();
                 // PREDATION ROUTINE
                 if(animal.name != name){
-                    if(feed == Feed.CARNIVORE && !huntingTargetsFailed.Exists(x => x == animal.name) && !animalS.isDead && stamina <= (100 - dailyLossStamina)){  // only if the animals not have interacted previously and failed                        
+                    if(feed == Feed.CARNIVORE && !huntingTargetsFailed.Exists(x => x == animal.name) && !animalS.isDead && stamina <= (100 - 2*dailyLossStamina)){  // only if the animals not have interacted previously and failed                        
                         // proceed just if stamina is not high                    
                         if(!animalS.interacting && targets.Contains(animalS.specie) && age >= timeToIndependence){ // only if animal is independent
                             interacting = true;  
@@ -150,6 +152,7 @@ public class Animal : MonoBehaviour{
                                 spriteRenderer.color = color;
                                 print(name + " matou " + animal.name);
                                 stamina = 100;
+                                Initializing.feedToGroup(specie);
                                 // feed of childrens
                                 foreach(var child in childrens){
                                     Animal scriptChild = child.GetComponent<Animal>();
@@ -216,6 +219,8 @@ public class Animal : MonoBehaviour{
                         scriptChild.specie = specie;
                         scriptChild.age = 0;
                         scriptChild.travelledDistance = 0f;
+                        if(specie == Specie.LION)
+                            Initializing.lions.Add(scriptChild);
                         scriptChild.enabled = true;
                         child.name = name + '_' + (currentNChilds+1).ToString(); 
                         print(name + " deu à luz " + child.name);                        
@@ -247,10 +252,16 @@ public class Animal : MonoBehaviour{
                 }            
             }
 
+            if((int)(stepCount / 1400) > Initializing.logCount){
+                Initializing.logCount += 1;
+                print("Leões mortos: " + Initializing.lions.FindAll((x) => x.isDead).Count + "/ " + Initializing.lions.Count);
+                print("Hyenas mortas: " + Initializing.hyenas.FindAll((x) => x.isDead).Count + "/ " + Initializing.hyenas.Count);
+            }
+
         }    
         else{
             print("Traveled distance by " + name + ": " + travelledDistance);
-            gameObject.GetComponent<Animal>().enabled = false;
+            gameObject.GetComponent<Animal>().enabled = false;           
         }    
     }
 
@@ -392,7 +403,8 @@ public class Animal : MonoBehaviour{
         numberChildrens = gender == Gender.F ? childs[rand.Next(0,10)] : 0;
         gestationTime = 110;
         maxSurvivalTime = 216;
-        age = rand.Next(0, maxSurvivalTime+1);  // repensar idade com base no número de filhotes do bando
+        // TO DO: verificar se é filhote e zerar idade
+        age = rand.Next(0, maxSurvivalTime-10);  // repensar idade com base no número de filhotes do bando
         // set the mom if is a child
         if(age < timeToIndependence){
             if(Initializing.femaleLions.Count > 0){
@@ -477,7 +489,7 @@ public class Animal : MonoBehaviour{
         gestationTime = 375;
         maxSurvivalTime = 240;
         // avaliar a percentual de cada faixa etária na hora de sortear idade. 
-        age = rand.Next(0, maxSurvivalTime+1);             
+        age = rand.Next(0, maxSurvivalTime-10);             
         sexualMaturity = gender == Gender.M ? 54 : 24;    
         if(gender == Gender.F && age >= sexualMaturity){
             isPregnant = rand.NextDouble() < 0.5f ? true : false;
@@ -504,7 +516,7 @@ public class Animal : MonoBehaviour{
         numberChildrens = gender == Gender.F ? rand.NextDouble() < 0.9f ? 1 : 2 : 0; // 1 (90%)
         gestationTime = 340;
         maxSurvivalTime = 264;
-        age = UnityEngine.Random.Range(0, maxSurvivalTime);                
+        age = UnityEngine.Random.Range(0, maxSurvivalTime-10);                
         sexualMaturity = gender == Gender.M ? 54 : 60;   
         if(gender == Gender.F && age >= sexualMaturity){
             isPregnant = rand.NextDouble() < 0.5f ? true : false;
