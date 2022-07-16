@@ -81,14 +81,23 @@ public class Initializing : MonoBehaviour{
     }
 
     public static void feedToGroup(Animal.Specie specie){
-        List<Animal> selected = new List<Animal>();
         if(specie == Animal.Specie.LION){            
             lions.Sort((x, y) => x.stamina.CompareTo(y.stamina));          
 
             for(int i=0; i < 3; i++){
                 if((lions[i].stamina < 100) && !lions[i].isDead) {               
-                    print(lions[i].name + '('+ lions[i].stamina + ')' + " se alimentou numa caça em grupo");
+                    print(lions[i].name + " (" + lions[i].stamina + ')' + " se alimentou numa caça em grupo");
                     lions[i].stamina = 100;
+                }    
+            }    
+        }
+        if(specie == Animal.Specie.HYENA){            
+            hyenas.Sort((x, y) => x.stamina.CompareTo(y.stamina));          
+
+            for(int i=0; i < 3; i++){
+                if((hyenas[i].stamina < 100) && !hyenas[i].isDead) {               
+                    print(hyenas[i].name + " (" + hyenas[i].stamina + ')' + " se alimentou numa caça em grupo");
+                    hyenas[i].stamina = 100;
                 }    
             }    
         }
