@@ -64,16 +64,13 @@ public class Initializing : MonoBehaviour{
             animalCopy.name = "Zebra" + (i+1).ToString(); 
         }
 
-        // Destroy(animal);
-
         StartCoroutine(ResizeSquare());    
         
     }
 
     // Update is called once per frame
     void Update(){
-        // print("Init valuesX: " + valuesX.Item1 + " " + valuesX.Item2);
-        // print("Init valuesY: " + valuesY.Item1 + " " + valuesY.Item2);
+
     }
 
     void FixedUpdate(){                        

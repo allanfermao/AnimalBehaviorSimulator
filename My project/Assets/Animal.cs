@@ -13,9 +13,7 @@ public class Animal : MonoBehaviour{
   public Color color = Color.blue; 
   public LineRenderer lineRenderer;
   public SpriteRenderer spriteRenderer;
-  public int coordTimeIntervalInMinutes;   
-  // Devido à distruibuição homogênea os valores limites variam, geralmente, entre -500 e 500 nos dois eixos
-  // Os valores dos limites podem ser escolhidos usando estudos empíricos
+  public int coordTimeIntervalInMinutes;     
   public Dictionary<string, float> limits = new Dictionary<string, float>(){
       {"L", -300f},
       {"R", 300f},
@@ -40,7 +38,7 @@ public class Animal : MonoBehaviour{
 
   // Individual Attributes
   public Gender gender;
-  public int age = 0; // months    
+  public int age = -1; // months    
   public int stamina = 100;
   public bool isDead = false;
   public int currentNChilds = 0;
@@ -57,13 +55,12 @@ public class Animal : MonoBehaviour{
   public Feed feed;
   public int deathRate;
   public int averageSpeed;
-  public float speed = 100f;
+  public float speed = 150f;
   public int numberChildrens; 
   public int deathRateChildrens;
   public int gestationTime; // days
   public int maxSurvivalTime = 1000; // months
   public int sexualMaturity; // months
-  public int timeBetweenBirths; // months
   public int timeToIndependence; // months
   public int populationDensity; // per 100km²
   public float dailyTravelledDistance; // km/24h
@@ -107,12 +104,6 @@ public class Animal : MonoBehaviour{
 		// a velocidade com base no tamanho do passo a ser dado. Passos mais curtos significam velocidades menores, já
 		// que todos são executados no mesmo tempo
 
-		// TODO: avaliar a distância percorrida por um indivíduo durante um espaço de tempo criar um somatório 
-		// dos tamanhos de passos até atingir a distância total da simulação, ajustando a velocidade, sem pausas. 
-		// Para que todos os indivíduos terminem juntos, uma abordagem é parar quando o primeiro finalizar.
-		// outra abordagem é simular momentos de descanso e avaliar os valores de distância percorrida e tempo de atividade
-		// frequentemente. Com base nisso, ajustar a distância percorrida, obedecendo a velocidade padrão. 
-
 		if(stepCount < points.Count){
 				Vector3 beforeStep = new Vector3(transform.position.x, transform.position.y, -0.5f);
 				transform.position = Vector3.MoveTowards(transform.position, points[stepCount], step); // Move the individual gradually
@@ -140,9 +131,7 @@ public class Animal : MonoBehaviour{
 								if(!animalS.interacting && targets.Contains(animalS.specie) && age >= timeToIndependence){ // only if animal is independent
 									interacting = true;  
 									float chance = UnityEngine.Random.Range(0.000001f, 1f);
-									// sugestão para diminuir o número de mortes de herbívoros: diminuir o interesse dos animais na caça (simular períodos de caça com um sorteio de "interesse")
 									if(chance <= groupHuntingSuccessRate){ // success 
-										// TO DO: Usar taxa de sucesso. Avaliar possibilidade de caça em grupo e individual:
 										animalS.enabled = false; // disable script of dead animal
 										animalS.spriteRenderer.color = Color.grey; 
 										animalS.stamina = 0; // targets are totaly consumed
@@ -160,7 +149,6 @@ public class Animal : MonoBehaviour{
 									}
 									else{ // fail
 											huntingTargetsFailed.Add(animal.name);
-											// print(name + " falhou com " + animal.name);
 									}                        
 									interacting = false;                                
 								}                                               
@@ -197,6 +185,7 @@ public class Animal : MonoBehaviour{
 							Destroy(child.GetComponent<Animal>());
 							Animal scriptChild = child.AddComponent<Animal>();
 							scriptChild.enabled = false;
+							scriptChild.age = 0;
 							scriptChild.specie = specie;
 							// copy points and stepCount of mother
 							scriptChild.points = points;
@@ -204,15 +193,17 @@ public class Animal : MonoBehaviour{
 							scriptChild.travelledDistance = 0f;
 							scriptChild.enabled = true;
 							if(specie == Specie.LION)
-									Initializing.lions.Add(scriptChild);
-							if(specie == Specie.HYENA)
-									Initializing.hyenas.Add(scriptChild);
+								Initializing.lions.Add(scriptChild);
+							else if(specie == Specie.HYENA)
+								Initializing.hyenas.Add(scriptChild);
+							else if(specie == Specie.BUFFALO)
+								Initializing.buffalos.Add(scriptChild);
+							else if(specie == Specie.ZEBRA)
+								Initializing.zebras.Add(scriptChild);
 							child.name = name + '_' + (currentNChilds+1).ToString(); 
 							print(name + " deu à luz " + child.name);                        
 							currentNChilds++;
 							childrens.Add(child);
-							scriptChild.age = 0;
-							print("setou idade de " + scriptChild.name);
 						}
 						timeOfCurrentGestation = -1;
 						isPregnant = false;
@@ -225,7 +216,7 @@ public class Animal : MonoBehaviour{
 						age++;            				
 					
 					if(feed == Feed.CARNIVORE && (stepCount * coordTimeIntervalInMinutes / 60) % 24 == 0f) // if have passed one day
-						stamina -= dailyLossStamina; // REAVALIAR ESSE VALOR 
+						stamina -= dailyLossStamina; 
 
 					// DEATH ROUTINE (natural causes)
 					if((stamina <= 5 || age > maxSurvivalTime)){
@@ -243,6 +234,9 @@ public class Animal : MonoBehaviour{
 					Initializing.logCount += 1;
 					print("Leões mortos: " + Initializing.lions.FindAll((x) => x.isDead).Count + "/ " + Initializing.lions.Count);
 					print("Hyenas mortas: " + Initializing.hyenas.FindAll((x) => x.isDead).Count + "/ " + Initializing.hyenas.Count);
+					print("Búfalos mortos: " + Initializing.buffalos.FindAll((x) => x.isDead).Count + "/ " + Initializing.buffalos.Count);
+					print("Zebras mortas: " + Initializing.zebras.FindAll((x) => x.isDead).Count + "/ " + Initializing.zebras.Count);
+
 				}
 
 		}    
@@ -257,7 +251,7 @@ public class Animal : MonoBehaviour{
 			Animal scriptChild = child.GetComponent<Animal>();
 			if(scriptChild.age <= timeToIndependence){ // just if is a young children
 				scriptChild.isDead = true;
-				scriptChild.stamina = 10; // can be consumed by carnivores and scavengers
+				scriptChild.stamina = 0; 
 				scriptChild.spriteRenderer.color = Color.grey; 
 				scriptChild.enabled = false;
 				print(child.name + " morreu em razão da morte da mãe");
@@ -293,8 +287,6 @@ public class Animal : MonoBehaviour{
 				float dist = (float)System.Math.Pow(UnityEngine.Random.Range(0.000001f, 1f), (1 / (1 - mu))); // Get distance of steps (levy distribution)            
 
 				float xCoord = (float)System.Math.Cos(ang) * dist;
-				// ########################## TO REMAKE THE MAX STEP SIZE LOGIC #####################################
-				// animais com perfil mais migratório podem ter tamanhos de passos maiores
 				// limit the x coord                 
 				if(xCoord > limits["R"])
 						xCoord = limits["R"];
@@ -382,16 +374,14 @@ public class Animal : MonoBehaviour{
       int[] childs = {1,2,3,3,3,3,3,4,4,4};
       
       gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
-      feed = Feed.CARNIVORE;        
-      // deathRate = 10;
-      // deathRateChildrens = 60;
+      feed = Feed.CARNIVORE;              
       timeToIndependence = 18;
       averageSpeed = 4;
       numberChildrens = gender == Gender.F ? childs[rand.Next(0,10)] : 0;
       gestationTime = 110;
-      maxSurvivalTime = 216;
-      // TO DO: verificar se é filhote e zerar idade
-      age = rand.Next(0, (maxSurvivalTime-20));  // repensar idade com base no número de filhotes do bando
+      maxSurvivalTime = 216;  
+      if(age != 0) 
+	  	age = rand.Next(0, (maxSurvivalTime-20));  // repensar idade com base no número de filhotes do bando
       // set the mom if is a child
       if(age < timeToIndependence){
 				if(Initializing.femaleLions.Count > 0){
@@ -408,7 +398,6 @@ public class Animal : MonoBehaviour{
           timeOfCurrentGestation = rand.Next(0, gestationTime*24*60);
       }    
       else isPregnant = false;
-      timeBetweenBirths = 24;
       populationDensity = 12;
       // dailyTravelledDistance = 4.5-15; // random
       groupHuntingSuccessRate = 0.30f;
@@ -426,16 +415,14 @@ public class Animal : MonoBehaviour{
       int[] childs = {1,1,1,2,2,2,2,2,3,4};
       
       gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
-      feed = Feed.CARNIVORE;        
-      // deathRate = 14;
-      // deathRateChildrens = 40-50; // random
+      feed = Feed.CARNIVORE;              
       timeToIndependence = 12;        
       averageSpeed = 10;        
       numberChildrens = gender == Gender.F ? childs[rand.Next(0,10)] : 0;
       gestationTime = 112;
       maxSurvivalTime = 300;
-      age = rand.Next(0, (maxSurvivalTime-30));    
-			// ESTÁ INICIALIZANDO DEPOIS DE SETAR A IDADE PRA 0. POR ISSO, GERA UM RANDÔMICO PARA FILHOTES
+      if(age != 0) 
+	  	age = rand.Next(0, (maxSurvivalTime-30));    
       // set the mom if is a child    
       if(age < timeToIndependence){
           if(Initializing.femaleHyenas.Count > 0){
@@ -452,7 +439,6 @@ public class Animal : MonoBehaviour{
           timeOfCurrentGestation = rand.Next(0, gestationTime*24*60);
       }    
       else isPregnant = false;
-      timeBetweenBirths = 15;
       populationDensity = 12;
       // dailyTravelledDistance = 27-80 (27-40); // random
       groupHuntingSuccessRate = 0.34f;
@@ -470,14 +456,13 @@ public class Animal : MonoBehaviour{
 
       gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;
       feed = Feed.HERBIVORE;
-      // deathRate = 14;        
-      // deathRateChildrens = 50; // random
       averageSpeed = 5;
       numberChildrens = gender == Gender.F ? 1 : 0;
       gestationTime = 375;
       maxSurvivalTime = 240;
       // avaliar a percentual de cada faixa etária na hora de sortear idade. 
-      age = rand.Next(0, maxSurvivalTime-20);  
+      if(age != 0) 
+	  	age = rand.Next(0, maxSurvivalTime-20);  
       sexualMaturity = gender == Gender.M ? 54 : 24;    
       if(gender == Gender.F && age >= sexualMaturity){
           isPregnant = rand.NextDouble() < 0.5f ? true : false;
@@ -485,7 +470,6 @@ public class Animal : MonoBehaviour{
       }    
       else isPregnant = false;
       isPregnant = rand.NextDouble() < 0.2f ? true : false;        
-      timeBetweenBirths = 12;
       populationDensity = 700;
       dailyTravelledDistance = 17; 
       targets = new List<Specie>();
@@ -498,13 +482,12 @@ public class Animal : MonoBehaviour{
 
       gender = rand.NextDouble() < 0.5f ? Gender.M : Gender.F;        
       feed = Feed.HERBIVORE;
-      // deathRate = 14;
-      // deathRateChildrens = 40-50; // random
       averageSpeed = 4;
       numberChildrens = gender == Gender.F ? rand.NextDouble() < 0.9f ? 1 : 2 : 0; // 1 (90%)
       gestationTime = 340;
       maxSurvivalTime = 264;
-      age = UnityEngine.Random.Range(0, (maxSurvivalTime-20));                
+      if(age != 0) 
+	  	age = UnityEngine.Random.Range(0, (maxSurvivalTime-20));                
       sexualMaturity = gender == Gender.M ? 54 : 60;   
       if(gender == Gender.F && age >= sexualMaturity){
           isPregnant = rand.NextDouble() < 0.5f ? true : false;
@@ -512,7 +495,6 @@ public class Animal : MonoBehaviour{
       }    
       else isPregnant = false;      
       isPregnant = rand.NextDouble() < 0.2f ? true : false;        
-      timeBetweenBirths = 18;
       populationDensity = 430;
       targets = new List<Specie>();
       // dailyTravelledDistance = 17; 1.2-8
