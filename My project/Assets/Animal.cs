@@ -7,7 +7,6 @@ public class Animal : MonoBehaviour{
 
   public int stepCount = 1;
   public GameObject animal;
-  public string label;
   public int timeScaleInDays;
   public List<Vector3> points;
   public Color color = Color.blue; 
@@ -40,6 +39,8 @@ public class Animal : MonoBehaviour{
   public Gender gender;
   public int age = -1; // months    
   public int stamina = 100;
+  public float speed = 5f;
+  public float relativeSpeed = 10f;
   public bool isDead = false;
   public int currentNChilds = 0;
   public bool isPregnant = false;
@@ -55,7 +56,6 @@ public class Animal : MonoBehaviour{
   public Feed feed;
   public int deathRate;
   public int averageSpeed;
-  public float speed = 150f;
   public int numberChildrens; 
   public int deathRateChildrens;
   public int gestationTime; // days
@@ -96,9 +96,8 @@ public class Animal : MonoBehaviour{
 
   }
 
-  void FixedUpdate(){
-		label = name;
-		float step = speed * Time.fixedDeltaTime; // Set the step size
+  void FixedUpdate(){		
+		float step = speed * relativeSpeed * Time.fixedDeltaTime; // Set the step size
 
 		// O modo ideal de implementação é fazer com que passe o mesmo tempo entre cada passo, o que significa ajustar 
 		// a velocidade com base no tamanho do passo a ser dado. Passos mais curtos significam velocidades menores, já
@@ -111,8 +110,15 @@ public class Animal : MonoBehaviour{
 
 				travelledDistance += Vector3.Distance(beforeStep, afterStep);
 
-				if(Vector3.Distance(transform.position, points[stepCount]) == 0f)
+				if(Vector3.Distance(transform.position, points[stepCount]) == 0f){
+						float lastStepSize = Vector3.Distance(points[stepCount-1], points[stepCount]);
 						stepCount++;      
+						if(stepCount < points.Count){
+							float nextStepSize = Vector3.Distance(points[stepCount-1], points[stepCount]);
+							float ratio = (float)(nextStepSize / lastStepSize);
+							relativeSpeed = relativeSpeed * ratio;
+						}
+				}		
 
 				if(stamina <= (100 - 2*dailyLossStamina) || gender == Gender.M){ // stamina is not full or is active in sex (male) 
 					Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(point: new Vector2(transform.position.x, transform.position.y), radius: 20f, layerMask: Physics2D.DefaultRaycastLayers, minDepth: -0.5f, maxDepth: -0.5f);            

@@ -101,14 +101,7 @@ public class Initializing : MonoBehaviour{
     }
 
     // get the max size of square and resize it
-    IEnumerator ResizeSquare(){        
-        // Observação: 
-        // será simulado um ambiente de 100 km², porém, o square será redimensionado de acordo com o alcance
-        // máximo das trajetórias. Será calculada a distância máxima percorrida pelas indivíduos no tempo de simulação
-        // O tamanho máximo do square deve ser limitado (distX <= 2000 e distY idem) por estudos empíricos
-        // e esse tamanho máximo equivale a 100 km²
-        
-        // yield return new WaitWhile(() => {});                
+    IEnumerator ResizeSquare(){                
         yield return new WaitForSeconds(0.5f);     
 
         float distX = valuesX.Item2 - valuesX.Item1;
