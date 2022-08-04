@@ -110,10 +110,10 @@ public class Initializing : MonoBehaviour{
         float midPointX = valuesX.Item1 + distX/2;
         float midPointY = valuesY.Item1 + distY/2;
 
-        print("distX: " + distX);
-        print("distY: " + distY);
-        print("midX: " + midPointX);
-        print("midY: " + midPointY);
+        // print("distX: " + distX);
+        // print("distY: " + distY);
+        // print("midX: " + midPointX);
+        // print("midY: " + midPointY);
 
         transform.localScale = new Vector3(distX, distY, 1); // resize square
         transform.position = new Vector3(midPointX, midPointY, 0); // reposition aquare              

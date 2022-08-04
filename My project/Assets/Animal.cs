@@ -39,7 +39,7 @@ public class Animal : MonoBehaviour{
   public Gender gender;
   public int age = -1; // months    
   public int stamina = 100;
-  public float speed = 5f;
+  public float speed = 50f;
   public float relativeSpeed = 10f;
   public bool isDead = false;
   public int currentNChilds = 0;
@@ -111,16 +111,14 @@ public class Animal : MonoBehaviour{
 				travelledDistance += Vector3.Distance(beforeStep, afterStep);
 
 				if(Vector3.Distance(transform.position, points[stepCount]) == 0f){
-						float lastStepSize = Vector3.Distance(points[stepCount-1], points[stepCount]);
-						stepCount++;      
-						if(stepCount < points.Count){
-							float nextStepSize = Vector3.Distance(points[stepCount-1], points[stepCount]);
-							float ratio = (float)(nextStepSize / lastStepSize);
-							relativeSpeed = relativeSpeed * ratio;
-						}
+					if(stepCount < points.Count-1){
+						float nextStepSize = Vector3.Distance(points[stepCount], points[stepCount+1]);
+						relativeSpeed = nextStepSize;
+					}
+					stepCount++;      
 				}		
 
-				if(stamina <= (100 - 2*dailyLossStamina) || gender == Gender.M){ // stamina is not full or is active in sex (male) 
+				if(stamina <= (100 - 3*dailyLossStamina) || gender == Gender.M){ // stamina is not full or is active in sex (male) 
 					Collider2D[] animalsInRange = Physics2D.OverlapCircleAll(point: new Vector2(transform.position.x, transform.position.y), radius: 20f, layerMask: Physics2D.DefaultRaycastLayers, minDepth: -0.5f, maxDepth: -0.5f);            
 					if(huntingTargetsFailed.Count > 0){
 						foreach(var animalName in new List<string>(huntingTargetsFailed)){ // remove target of vector of fails if is out of the range
@@ -238,8 +236,9 @@ public class Animal : MonoBehaviour{
 
 				if((int)(stepCount / 1440) > Initializing.logCount){
 					Initializing.logCount += 1;
+					print("Mês " + Initializing.logCount + ':');
 					print("Leões mortos: " + Initializing.lions.FindAll((x) => x.isDead).Count + "/ " + Initializing.lions.Count);
-					print("Hyenas mortas: " + Initializing.hyenas.FindAll((x) => x.isDead).Count + "/ " + Initializing.hyenas.Count);
+					print("Hienas mortas: " + Initializing.hyenas.FindAll((x) => x.isDead).Count + "/ " + Initializing.hyenas.Count);
 					print("Búfalos mortos: " + Initializing.buffalos.FindAll((x) => x.isDead).Count + "/ " + Initializing.buffalos.Count);
 					print("Zebras mortas: " + Initializing.zebras.FindAll((x) => x.isDead).Count + "/ " + Initializing.zebras.Count);
 
@@ -247,15 +246,16 @@ public class Animal : MonoBehaviour{
 
 		}    
 		else{
-			print("Traveled distance by " + name + ": " + travelledDistance);
+			print("Distância percorrida por " + name + ": " + travelledDistance);
 			gameObject.GetComponent<Animal>().enabled = false;           
 		}    
   }
 
   void killChildrens(){        
+		System.Random rand = new System.Random();      
 		foreach(var child in childrens){
 			Animal scriptChild = child.GetComponent<Animal>();
-			if(scriptChild.age <= timeToIndependence){ // just if is a young children
+			if(scriptChild.age <= timeToIndependence && rand.NextDouble() < 0.4f){ // just if is a young children
 				scriptChild.isDead = true;
 				scriptChild.stamina = 0; 
 				scriptChild.spriteRenderer.color = Color.grey; 
@@ -387,15 +387,18 @@ public class Animal : MonoBehaviour{
       gestationTime = 110;
       maxSurvivalTime = 216;  
       if(age != 0) 
-	  	age = rand.Next(0, (maxSurvivalTime-20));  // repensar idade com base no número de filhotes do bando
+	  	age = rand.Next(1, (maxSurvivalTime-20));  // repensar idade com base no número de filhotes do bando
       // set the mom if is a child
-      if(age < timeToIndependence){
-				if(Initializing.femaleLions.Count > 0){
-					Animal res = Initializing.femaleLions.Find(x => !x.isDead);
-					if(res) res.childrens.Add(gameObject);
-					else age = timeToIndependence;
-				}
-				else age = timeToIndependence;
+      if(age < timeToIndependence && age != 0){
+		if(Initializing.femaleLions.Count > 0){
+			List<Animal> mothers = Initializing.femaleLions.FindAll(x => !x.isDead);
+			if(mothers.Count > 0){
+				Animal res = mothers[rand.Next(0, mothers.Count)];
+				res.childrens.Add(gameObject);
+			}
+			else age = timeToIndependence;
+		}
+		else age = timeToIndependence;
       }
       sexualMaturity = gender == Gender.M ? 60 : 48;
       if(gender == Gender.F && age >= sexualMaturity){
@@ -430,13 +433,16 @@ public class Animal : MonoBehaviour{
       if(age != 0) 
 	  	age = rand.Next(0, (maxSurvivalTime-30));    
       // set the mom if is a child    
-      if(age < timeToIndependence){
-          if(Initializing.femaleHyenas.Count > 0){
-              Animal res = Initializing.femaleHyenas.Find(x => !x.isDead);
-              if(res) res.childrens.Add(gameObject);
-              else age = timeToIndependence;
-          }
-          else age = timeToIndependence;
+      if(age < timeToIndependence && age != 0){
+		if(Initializing.femaleHyenas.Count > 0){
+			List<Animal> mothers = Initializing.femaleHyenas.FindAll(x => !x.isDead);
+			if(mothers.Count > 0){
+				Animal res = mothers[rand.Next(0, mothers.Count)];
+				res.childrens.Add(gameObject);
+			}
+			else age = timeToIndependence;
+		}
+		else age = timeToIndependence;
       }
       sexualMaturity = gender == Gender.M ? 21 : 36;
       if(gender == Gender.F && age >= sexualMaturity){
