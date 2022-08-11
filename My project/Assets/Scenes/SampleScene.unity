@@ -569,4 +569,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animal: {fileID: 170989169}
-  timeScaleInDays: 240
+  timeScaleInDays: 360

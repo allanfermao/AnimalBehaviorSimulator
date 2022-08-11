@@ -5,7 +5,7 @@ using System;
 
 public class Initializing : MonoBehaviour{
     public GameObject animal;
-    public int timeScaleInDays = 120;
+    public int timeScaleInDays = 240;
     public static int coordTimeIntervalInMinutes = 30;
     public static List<Animal> lions = new List<Animal>();
     public static List<Animal> hyenas = new List<Animal>();
@@ -28,7 +28,6 @@ public class Initializing : MonoBehaviour{
     void Start(){
 
         Animal component = animal.AddComponent<Animal>(); // get the script
-        // TO DO: não add o script e sim adiciona-lo em cada for com o addComponent e copiar os dois atributos a seguir
         component.timeScaleInDays = timeScaleInDays;
         component.coordTimeIntervalInMinutes = coordTimeIntervalInMinutes;
 
@@ -109,11 +108,6 @@ public class Initializing : MonoBehaviour{
 
         float midPointX = valuesX.Item1 + distX/2;
         float midPointY = valuesY.Item1 + distY/2;
-
-        // print("distX: " + distX);
-        // print("distY: " + distY);
-        // print("midX: " + midPointX);
-        // print("midY: " + midPointY);
 
         transform.localScale = new Vector3(distX, distY, 1); // resize square
         transform.position = new Vector3(midPointX, midPointY, 0); // reposition aquare              
